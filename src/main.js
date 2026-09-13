@@ -18,14 +18,15 @@ const ICONS = {
   home: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
   plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   bars: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>',
+  card: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></svg>',
 };
 
 const routes = {
   '#/dashboard': { view: DashboardView, tab: true },
   '#/nuevo': { view: NuevoMovimientoView, tab: true },
   '#/presupuestos': { view: PresupuestosView, tab: true },
+  '#/cuentas': { view: CuentasView, tab: true },
   '#/ajustes': { view: AjustesView },
-  '#/cuentas': { view: CuentasView },
   '#/categorias': { view: CategoriasView },
   '#/meta': { view: MetaView },
   '#/presupuesto': { view: PresupuestoFormView },
@@ -68,6 +69,7 @@ function tabbar(hash) {
       ${tab('#/dashboard', ICONS.home, 'Inicio')}
       ${tab('#/nuevo', ICONS.plus, 'Nuevo')}
       ${tab('#/presupuestos', ICONS.bars, 'Presup.')}
+      ${tab('#/cuentas', ICONS.card, 'Cuentas')}
     </nav>
   `;
 }

@@ -17,10 +17,7 @@ export function CuentasView() {
   el.innerHTML = `
     <header class="app-header">
       <div class="bar">
-        <div class="hdr-left">
-          <a class="back-btn" href="#/ajustes" aria-label="Volver">‹</a>
-          <h1 class="large-title">Cuentas</h1>
-        </div>
+        <h1 class="large-title">Cuentas</h1>
       </div>
     </header>
     <div class="screen-body"><div class="loading">Cargando…</div></div>

@@ -12,14 +12,6 @@ export function AjustesView() {
       </div>
     </header>
     <div class="screen-body">
-      <a class="hub-item" href="#/cuentas">
-        <span class="emoji">🏦</span>
-        <span class="grow">
-          <span class="h-title">Cuentas</span>
-          <span class="h-sub">Débito, efectivo, crédito y ahorro</span>
-        </span>
-        <span class="chev">›</span>
-      </a>
       <a class="hub-item" href="#/categorias">
         <span class="emoji">🏷️</span>
         <span class="grow">
