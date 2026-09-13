@@ -1103,3 +1103,74 @@ input[type='color'] {
   color: var(--t-70);
   margin: 6px 2px 0;
 }
+
+/* ============================================================================
+   Modal / hoja inferior (ventana emergente)
+   ============================================================================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.sheet {
+  width: 100%;
+  max-width: 460px;
+  background: #172033;
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+  padding: 8px 18px calc(20px + var(--safe-bottom));
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 -24px 60px -12px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  animation: sheetUp 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 4px auto 10px;
+}
+.sheet-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.sheet-titlebar h2 {
+  font: 700 20px/1 var(--font);
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+.sheet-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  flex: none;
+}
+body.modal-open {
+  overflow: hidden;
+}

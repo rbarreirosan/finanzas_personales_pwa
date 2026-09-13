@@ -18,12 +18,14 @@ export function CuentasView() {
     <header class="app-header">
       <div class="bar">
         <h1 class="large-title">Cuentas</h1>
+        <button class="icon-btn" id="add-btn" aria-label="Nueva cuenta">+</button>
       </div>
     </header>
-    <div class="screen-body"><div class="loading">Cargando…</div></div>
+    <div class="screen-body" id="body"><div class="loading">Cargando…</div></div>
+    <div class="modal-backdrop" id="modal" hidden><div class="sheet" id="sheet"></div></div>
   `;
   init(el).catch((err) => {
-    el.querySelector('.screen-body').innerHTML = `<div class="msg error">${escapeHtml(
+    el.querySelector('#body').innerHTML = `<div class="msg error">${escapeHtml(
       err.message || err
     )}</div>`;
   });
@@ -31,25 +33,59 @@ export function CuentasView() {
 }
 
 async function init(el) {
-  const body = el.querySelector('.screen-body');
+  const body = el.querySelector('#body');
+  const modal = el.querySelector('#modal');
+  const sheet = el.querySelector('#sheet');
   let cuentas = await listCuentas();
-  const state = { id: null, tipo: 'debito', activa: true };
+  const state = { id: null, tipo: 'debito' };
 
-  function reset() {
-    state.id = null;
-    state.tipo = 'debito';
-    state.activa = true;
+  // ---------- Lista ----------
+  function renderList() {
+    if (!cuentas.length) {
+      body.innerHTML =
+        '<div class="empty">Aún no tienes cuentas.<br>Toca “+” arriba para crear la primera.</div>';
+      return;
+    }
+    body.innerHTML =
+      '<p class="form-title">Tus cuentas</p>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+      cuentas
+        .map(
+          (c) => `
+        <button type="button" class="mng-item" data-id="${c.id}">
+          <span class="mi-emoji">${tipoEmoji(c.tipo)}</span>
+          <span class="grow">
+            <span class="mi-title">${escapeHtml(c.nombre)}${
+            c.activa ? '' : ' · (inactiva)'
+          }</span>
+            <span class="mi-sub">${tipoLabel(c.tipo)}</span>
+          </span>
+          <span class="mi-amount">${money0(c.saldo_inicial)}</span>
+        </button>`
+        )
+        .join('') +
+      '</div>';
+    body.querySelectorAll('.mng-item').forEach((b) =>
+      b.addEventListener('click', () =>
+        openModal(cuentas.find((x) => x.id === b.dataset.id))
+      )
+    );
   }
 
-  function render() {
-    body.innerHTML = `
-      <div id="msg"></div>
+  // ---------- Modal ----------
+  function openModal(cuenta = null) {
+    state.id = cuenta?.id || null;
+    state.tipo = cuenta?.tipo || 'debito';
+    const editing = Boolean(cuenta);
 
-      <p class="form-title">Tus cuentas</p>
-      <div id="lista" style="display:flex;flex-direction:column;gap:8px"></div>
-
-      <p class="form-title" id="form-title">Nueva cuenta</p>
-      <form id="form" class="card">
+    sheet.innerHTML = `
+      <div class="sheet-handle"></div>
+      <div class="sheet-titlebar">
+        <h2>${editing ? 'Editar cuenta' : 'Nueva cuenta'}</h2>
+        <button class="sheet-close" id="close" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="form">
+        <div id="msg"></div>
         <div class="field">
           <span class="f-label">Nombre</span>
           <input id="nombre" type="text" placeholder="Ej. Débito BBVA" required />
@@ -58,8 +94,7 @@ async function init(el) {
           <span class="f-label">Tipo</span>
           <div class="seg" id="tipo-seg">
             ${TIPOS.map(
-              (t) =>
-                `<button type="button" data-tipo="${t.v}">${t.l}</button>`
+              (t) => `<button type="button" data-tipo="${t.v}">${t.l}</button>`
             ).join('')}
           </div>
         </div>
@@ -78,133 +113,98 @@ async function init(el) {
             <span class="track"></span>
           </label>
         </div>
-        <div id="actions"></div>
+        <div id="actions" style="margin-top:6px"></div>
       </form>
     `;
 
-    renderList();
-    fillForm();
-    bind();
-  }
-
-  function renderList() {
-    const lista = body.querySelector('#lista');
-    if (!cuentas.length) {
-      lista.innerHTML = '<div class="empty">Aún no tienes cuentas. Crea la primera abajo.</div>';
-      return;
-    }
-    lista.innerHTML = cuentas
-      .map(
-        (c) => `
-        <button type="button" class="mng-item ${
-          c.id === state.id ? 'selected' : ''
-        }" data-id="${c.id}">
-          <span class="mi-emoji">${tipoEmoji(c.tipo)}</span>
-          <span class="grow">
-            <span class="mi-title">${escapeHtml(c.nombre)}${
-          c.activa ? '' : ' · (inactiva)'
-        }</span>
-            <span class="mi-sub">${tipoLabel(c.tipo)}</span>
-          </span>
-          <span class="mi-amount">${money0(c.saldo_inicial)}</span>
-        </button>`
-      )
-      .join('');
-    lista.querySelectorAll('.mng-item').forEach((b) =>
-      b.addEventListener('click', () => selectCuenta(b.dataset.id))
-    );
-  }
-
-  function fillForm() {
-    const seg = body.querySelectorAll('#tipo-seg button');
+    // Prefill / acciones
+    const seg = sheet.querySelectorAll('#tipo-seg button');
     seg.forEach((b) => b.classList.toggle('active', b.dataset.tipo === state.tipo));
-    body.querySelector('#limite-wrap').hidden = state.tipo !== 'credito';
-    body.querySelector('#form-title').textContent = state.id
-      ? 'Editar cuenta'
-      : 'Nueva cuenta';
-    body.querySelector('#actions').innerHTML = state.id
+    sheet.querySelector('#limite-wrap').hidden = state.tipo !== 'credito';
+    sheet.querySelector('#actions').innerHTML = editing
       ? `<div class="btn-actions">
            <button type="button" class="btn-danger" id="del">Eliminar</button>
            <button type="submit" class="btn">Actualizar</button>
-         </div>
-         <button type="button" class="btn-secondary" id="cancel" style="margin-top:10px">Cancelar</button>`
+         </div>`
       : `<button type="submit" class="btn btn-block">Guardar cuenta</button>`;
-  }
 
-  function selectCuenta(id) {
-    const c = cuentas.find((x) => x.id === id);
-    if (!c) return;
-    state.id = c.id;
-    state.tipo = c.tipo;
-    state.activa = c.activa;
-    render();
-    body.querySelector('#nombre').value = c.nombre || '';
-    body.querySelector('#saldo').value = c.saldo_inicial ?? '';
-    body.querySelector('#activa').checked = c.activa !== false;
-    if (c.tipo === 'credito')
-      body.querySelector('#limite').value = c.limite_credito ?? '';
-    window.scrollTo({ top: body.querySelector('#form').offsetTop, behavior: 'smooth' });
-  }
+    if (editing) {
+      sheet.querySelector('#nombre').value = cuenta.nombre || '';
+      sheet.querySelector('#saldo').value = cuenta.saldo_inicial ?? '';
+      sheet.querySelector('#activa').checked = cuenta.activa !== false;
+      if (cuenta.tipo === 'credito')
+        sheet.querySelector('#limite').value = cuenta.limite_credito ?? '';
+    }
 
-  function bind() {
-    const form = body.querySelector('#form');
-    const msg = body.querySelector('#msg');
-
-    body.querySelectorAll('#tipo-seg button').forEach((b) =>
+    // Eventos del formulario
+    seg.forEach((b) =>
       b.addEventListener('click', () => {
         state.tipo = b.dataset.tipo;
-        body
-          .querySelectorAll('#tipo-seg button')
-          .forEach((x) => x.classList.toggle('active', x === b));
-        body.querySelector('#limite-wrap').hidden = state.tipo !== 'credito';
+        seg.forEach((x) => x.classList.toggle('active', x === b));
+        sheet.querySelector('#limite-wrap').hidden = state.tipo !== 'credito';
       })
     );
+    sheet.querySelector('#close').addEventListener('click', closeModal);
+    sheet.querySelector('#del')?.addEventListener('click', onDelete);
+    sheet.querySelector('#form').addEventListener('submit', onSubmit);
 
-    body.querySelector('#cancel')?.addEventListener('click', () => {
-      reset();
-      render();
-    });
-
-    body.querySelector('#del')?.addEventListener('click', async () => {
-      if (!confirm('¿Eliminar esta cuenta? (No podrás si tiene movimientos.)')) return;
-      try {
-        await eliminarCuenta(state.id);
-        cuentas = await listCuentas();
-        reset();
-        render();
-      } catch (err) {
-        msg.innerHTML = `<div class="msg error">${escapeHtml(
-          err.message || 'No se pudo eliminar (¿tiene movimientos asociados?).'
-        )}</div>`;
-      }
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msg.innerHTML = '';
-      try {
-        await guardarCuenta(
-          {
-            nombre: body.querySelector('#nombre').value,
-            tipo: state.tipo,
-            saldo_inicial: body.querySelector('#saldo').value,
-            limite_credito: body.querySelector('#limite')?.value || null,
-            activa: body.querySelector('#activa').checked,
-          },
-          state.id
-        );
-        cuentas = await listCuentas();
-        reset();
-        render();
-        body.querySelector('#msg').innerHTML =
-          '<div class="msg ok">✅ Cuenta guardada.</div>';
-      } catch (err) {
-        msg.innerHTML = `<div class="msg error">${escapeHtml(
-          err.message || 'No se pudo guardar.'
-        )}</div>`;
-      }
-    });
+    modal.hidden = false;
+    document.body.classList.add('modal-open');
+    sheet.scrollTop = 0;
+    sheet.querySelector('#nombre').focus();
   }
 
-  render();
+  function closeModal() {
+    modal.hidden = true;
+    sheet.innerHTML = '';
+    document.body.classList.remove('modal-open');
+  }
+
+  // Cerrar tocando el fondo (fuera de la hoja)
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  async function onDelete() {
+    if (!confirm('¿Eliminar esta cuenta? (No se puede si tiene movimientos.)')) return;
+    const msg = sheet.querySelector('#msg');
+    try {
+      await eliminarCuenta(state.id);
+      cuentas = await listCuentas();
+      closeModal();
+      renderList();
+    } catch (err) {
+      msg.innerHTML = `<div class="msg error">${escapeHtml(
+        err.message || 'No se pudo eliminar (¿tiene movimientos asociados?).'
+      )}</div>`;
+    }
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    const msg = sheet.querySelector('#msg');
+    msg.innerHTML = '';
+    try {
+      await guardarCuenta(
+        {
+          nombre: sheet.querySelector('#nombre').value,
+          tipo: state.tipo,
+          saldo_inicial: sheet.querySelector('#saldo').value,
+          limite_credito: sheet.querySelector('#limite')?.value || null,
+          activa: sheet.querySelector('#activa').checked,
+        },
+        state.id
+      );
+      cuentas = await listCuentas();
+      closeModal();
+      renderList();
+    } catch (err) {
+      msg.innerHTML = `<div class="msg error">${escapeHtml(
+        err.message || 'No se pudo guardar.'
+      )}</div>`;
+    }
+  }
+
+  el.querySelector('#add-btn').addEventListener('click', () => openModal(null));
+  renderList();
 }
