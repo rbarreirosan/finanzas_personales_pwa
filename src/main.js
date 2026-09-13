@@ -1,5 +1,6 @@
 import './style.css';
-import { supabaseConfigOk } from './lib/supabase.js';
+import { supabaseConfigOk, configError } from './lib/supabase.js';
+import { escapeHtml } from './lib/dom.js';
 import { getSession, onAuthChange, signOut } from './lib/auth.js';
 import { LoginView } from './views/login.js';
 import { DashboardView } from './views/dashboard.js';
@@ -27,11 +28,11 @@ function renderConfigError() {
     <div class="auth">
       <div class="brand"><div class="logo">⚙️</div><h1>Configuración pendiente</h1></div>
       <div class="auth-card">
-        <p style="margin:0">Faltan las credenciales de Supabase.</p>
+        <p style="margin:0">${escapeHtml(configError || 'Faltan las credenciales de Supabase.')}</p>
         <p class="gr-sub" style="margin:0">
-          Copia <code>.env.example</code> a <code>.env</code> y rellena
-          <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>
-          (Settings → API en tu proyecto), luego reinicia el servidor.
+          Revisa <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>
+          (en Supabase: Settings → API). En Cloudflare van en Settings →
+          Variables and Secrets, y hay que volver a publicar (Retry deployment).
         </p>
       </div>
     </div>
