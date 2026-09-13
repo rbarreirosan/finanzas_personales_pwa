@@ -2,6 +2,7 @@ import './style.css';
 import { supabaseConfigOk, configError } from './lib/supabase.js';
 import { escapeHtml } from './lib/dom.js';
 import { getSession, onAuthChange, signOut } from './lib/auth.js';
+import { startIdle, stopIdle } from './lib/idle.js';
 import { LoginView } from './views/login.js';
 import { DashboardView } from './views/dashboard.js';
 import { NuevoMovimientoView } from './views/nuevoMovimiento.js';
@@ -118,6 +119,7 @@ async function bootstrap() {
   onAuthChange((session) => {
     const wasLoggedIn = Boolean(currentSession);
     currentSession = session;
+    manageIdle(session);
     if (Boolean(session) !== wasLoggedIn) {
       if (session && !routes[location.hash]) location.hash = '#/dashboard';
       route();
@@ -128,7 +130,28 @@ async function bootstrap() {
     if (currentSession && supabaseConfigOk) renderApp();
   });
 
+  manageIdle(currentSession);
   route();
+}
+
+// Cierra la sesión tras 10 min de inactividad (o al volver si ya se venció).
+function manageIdle(session) {
+  if (session) {
+    startIdle(async () => {
+      try {
+        sessionStorage.setItem('fp_idle_logout', '1');
+      } catch {
+        /* ignora */
+      }
+      try {
+        await signOut();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  } else {
+    stopIdle();
+  }
 }
 
 bootstrap();

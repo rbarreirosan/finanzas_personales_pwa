@@ -9,6 +9,17 @@ export function LoginView() {
   let showPw = false;
 
   function render() {
+    let idleNote = '';
+    try {
+      if (sessionStorage.getItem('fp_idle_logout')) {
+        sessionStorage.removeItem('fp_idle_logout');
+        idleNote =
+          '<div class="msg ok">Cerramos tu sesión por inactividad. Vuelve a entrar.</div>';
+      }
+    } catch {
+      /* ignora */
+    }
+
     el.innerHTML = `
       <div class="brand">
         <div class="logo">$</div>
@@ -17,7 +28,7 @@ export function LoginView() {
       </div>
 
       <form id="auth-form" class="auth-card">
-        <div id="auth-msg"></div>
+        <div id="auth-msg">${idleNote}</div>
 
         <div class="field">
           <label for="email">Correo</label>
