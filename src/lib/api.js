@@ -106,14 +106,12 @@ export async function sugerirCategoria(texto, campo, tipo) {
   return data ?? null; // uuid de categoria o null
 }
 
-// ---------- Insertar movimiento (tabla transacciones) ----------
-// Respeta las validaciones del esquema:
+// ---------- Movimientos (tabla transacciones): crear, editar, eliminar ----------
+// Valida y normaliza según las reglas del esquema:
 //  - monto > 0
 //  - transferencia: cuenta_destino_id != cuenta_id y categoria_id null
 //  - ingreso/gasto: categoria_id requerida y cuenta_destino_id null
-export async function crearTransaccion(mov) {
-  const user_id = await requireUserId();
-
+function normalizeMov(mov) {
   const monto = Number(mov.monto);
   if (!Number.isFinite(monto) || monto <= 0) {
     throw new Error('El monto debe ser mayor a 0.');
@@ -133,8 +131,7 @@ export async function crearTransaccion(mov) {
     }
   }
 
-  const payload = {
-    user_id,
+  return {
     fecha: mov.fecha,
     tipo: mov.tipo,
     monto,
@@ -145,7 +142,11 @@ export async function crearTransaccion(mov) {
     descripcion: mov.descripcion?.trim() || null,
     etiquetas: mov.etiquetas?.trim() || null,
   };
+}
 
+export async function crearTransaccion(mov) {
+  const user_id = await requireUserId();
+  const payload = { user_id, ...normalizeMov(mov) };
   const { data, error } = await supabase
     .from('transacciones')
     .insert(payload)
@@ -153,6 +154,25 @@ export async function crearTransaccion(mov) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Edita un movimiento existente (RLS garantiza que sea del usuario).
+export async function actualizarTransaccion(id, mov) {
+  if (!id) throw new Error('Falta el id del movimiento.');
+  const payload = normalizeMov(mov);
+  const { data, error } = await supabase
+    .from('transacciones')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarTransaccion(id) {
+  const { error } = await supabase.from('transacciones').delete().eq('id', id);
+  if (error) throw error;
 }
 
 // ---------- Presupuestos (vista v_presupuestos, §2.4) ----------
@@ -201,7 +221,7 @@ export function getMovimientos(limit = 200) {
     const { data, error } = await supabase
       .from('v_transacciones')
       .select(
-        'id, fecha, tipo, monto, comercio, descripcion, etiquetas, cuenta_nombre, cuenta_destino_nombre, categoria_nombre, created_at'
+        'id, fecha, tipo, monto, comercio, descripcion, etiquetas, cuenta_id, cuenta_destino_id, categoria_id, cuenta_nombre, cuenta_destino_nombre, categoria_nombre, created_at'
       )
       .order('fecha', { ascending: false })
       .order('created_at', { ascending: false })

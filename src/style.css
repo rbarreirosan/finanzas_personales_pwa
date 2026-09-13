@@ -1225,6 +1225,45 @@ body.modal-open {
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
+/* Fila deslizable: se corre a la derecha para revelar "Editar" */
+.swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.swipe-action {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--indigo);
+  border-radius: 16px;
+}
+.swipe-action button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 0;
+  color: #fff;
+  font: 600 12px/1 var(--font);
+  cursor: pointer;
+}
+.swipe-action .sa-ic {
+  font-size: 18px;
+}
+.swipe-fg {
+  position: relative;
+  transition: transform 0.22s ease;
+  will-change: transform;
+  touch-action: pan-y;
+}
+
 /* Aviso flotante "sin conexión": informativo, no bloquea la interacción */
 .offline-banner {
   position: fixed;
