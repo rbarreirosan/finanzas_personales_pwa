@@ -3,6 +3,8 @@ import { supabaseConfigOk, configError } from './lib/supabase.js';
 import { escapeHtml } from './lib/dom.js';
 import { getSession, onAuthChange, signOut } from './lib/auth.js';
 import { startIdle, stopIdle } from './lib/idle.js';
+import { isEnabled as faceEnabled } from './lib/faceid.js';
+import { LockView } from './views/lock.js';
 import { LoginView } from './views/login.js';
 import { DashboardView } from './views/dashboard.js';
 import { NuevoMovimientoView } from './views/nuevoMovimiento.js';
@@ -43,6 +45,7 @@ function parseHash() {
 }
 
 let currentSession = null;
+let locked = false;
 
 function renderConfigError() {
   app.innerHTML = `
@@ -87,10 +90,33 @@ function renderLogin() {
   app.appendChild(LoginView());
 }
 
+function renderLock() {
+  app.innerHTML = '';
+  app.appendChild(
+    LockView({
+      onUnlock: () => {
+        locked = false;
+        route();
+        manageIdle(currentSession);
+      },
+      onPassword: async () => {
+        // Respaldo: salir para entrar con correo y contraseña.
+        try {
+          await signOut();
+        } catch (err) {
+          console.error(err);
+        }
+      },
+    })
+  );
+}
+
 function route() {
   if (!supabaseConfigOk) return renderConfigError();
-  if (currentSession) renderApp();
-  else renderLogin();
+  if (currentSession) {
+    if (locked) renderLock();
+    else renderApp();
+  } else renderLogin();
 }
 
 async function bootstrap() {
@@ -104,6 +130,9 @@ async function bootstrap() {
   } catch (e) {
     console.error(e);
   }
+
+  // Si hay sesión y Face ID está activo, arranca bloqueada (pide Face ID).
+  locked = Boolean(currentSession) && faceEnabled();
 
   // Logout por delegación (el botón vive dentro del Dashboard).
   app.addEventListener('click', async (e) => {
@@ -119,6 +148,8 @@ async function bootstrap() {
   onAuthChange((session) => {
     const wasLoggedIn = Boolean(currentSession);
     currentSession = session;
+    // Al iniciar sesión con contraseña, o al cerrar, no se queda bloqueada.
+    if (!session || !wasLoggedIn) locked = false;
     manageIdle(session);
     if (Boolean(session) !== wasLoggedIn) {
       if (session && !routes[location.hash]) location.hash = '#/dashboard';
@@ -134,9 +165,19 @@ async function bootstrap() {
   route();
 }
 
-// Cierra la sesión tras 10 min de inactividad (o al volver si ya se venció).
+// Tras 10 min de inactividad: si Face ID está activo, BLOQUEA (se reabre con
+// Face ID); si no, cierra la sesión. No corre mientras ya está bloqueada.
 function manageIdle(session) {
-  if (session) {
+  stopIdle();
+  if (!session || locked) return;
+
+  if (faceEnabled()) {
+    startIdle(() => {
+      locked = true;
+      stopIdle();
+      route();
+    });
+  } else {
     startIdle(async () => {
       try {
         sessionStorage.setItem('fp_idle_logout', '1');
@@ -149,8 +190,6 @@ function manageIdle(session) {
         console.error(err);
       }
     });
-  } else {
-    stopIdle();
   }
 }
 
