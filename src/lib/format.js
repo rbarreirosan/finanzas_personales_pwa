@@ -1,4 +1,9 @@
 // Formateo de moneda (MXN por defecto, segun el esquema) y utilidades de fecha.
+import { isPrivate } from './privacy.js';
+
+// Máscara para el modo "ocultar cantidades".
+const MASK = '••••••';
+
 const currencyFmt = new Intl.NumberFormat('es-MX', {
   style: 'currency',
   currency: 'MXN',
@@ -13,6 +18,7 @@ const currencyFmt0 = new Intl.NumberFormat('es-MX', {
 });
 
 export function money(n) {
+  if (isPrivate()) return MASK;
   const v = Number(n);
   if (!Number.isFinite(v)) return '—';
   return currencyFmt.format(v);
@@ -20,6 +26,7 @@ export function money(n) {
 
 // Sin decimales, para cifras "de un vistazo" (KPIs, patrimonio, presupuestos).
 export function money0(n) {
+  if (isPrivate()) return MASK;
   const v = Number(n);
   if (!Number.isFinite(v)) return '—';
   return currencyFmt0.format(v);
