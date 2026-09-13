@@ -131,11 +131,8 @@ async function bootstrap() {
 
 bootstrap();
 
-// ---------- Registro del Service Worker (PWA) ----------
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .catch((err) => console.warn('SW registro falló:', err));
-  });
-}
+// ---------- Service Worker ----------
+// Ya NO se registra un SW: durante el desarrollo el caché offline provocaba
+// versiones viejas pegadas. Si quedó uno registrado de antes, public/sw.js es
+// ahora un "kill-switch" que se da de baja solo y limpia las cachés.
+// (El navegador vuelve a pedir /sw.js cuando aún hay un registro previo.)
