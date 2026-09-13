@@ -1,5 +1,5 @@
 import { listCuentas, guardarCuenta, eliminarCuenta } from '../lib/api.js';
-import { money0 } from '../lib/format.js';
+import { money } from '../lib/format.js';
 import { escapeHtml } from '../lib/dom.js';
 
 const TIPOS = [
@@ -60,7 +60,7 @@ async function init(el) {
           }</span>
             <span class="mi-sub">${tipoLabel(c.tipo)}</span>
           </span>
-          <span class="mi-amount">${money0(c.saldo_inicial)}</span>
+          <span class="mi-amount">${money(c.saldo_inicial)}</span>
         </button>`
         )
         .join('') +
