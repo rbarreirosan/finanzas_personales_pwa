@@ -1,33 +1,84 @@
 // ----------------------------------------------------------------------------
-// Service worker "kill-switch": desactiva el caché anterior.
+// Service worker de la PWA: permite que la app ABRA SIN CONEXIÓN.
 //
-// Durante el desarrollo, el caché offline provocaba que el iPhone siguiera
-// mostrando versiones viejas. Este SW borra TODAS las cachés, se da de baja a
-// sí mismo y recarga la app para que a partir de ahora todo venga siempre
-// fresco desde la red (que de todos modos hace falta para Supabase).
+// Guarda en caché la "cáscara" de la app (index.html + JS + CSS + iconos) para
+// que la interfaz cargue aunque no haya red. Los DATOS (cuentas, movimientos,
+// KPIs) no se guardan aquí: eso lo hace la capa de datos (src/lib/store.js),
+// que devuelve los últimos datos guardados cuando Supabase no responde.
 //
-// Más adelante se puede volver a agregar un service worker de caché bien
-// versionado para soporte offline.
+// Estrategias:
+//  - Navegación (abrir la app): red primero, con respaldo a la copia en caché.
+//    Así, con red siempre se ve la versión nueva; sin red, la última guardada.
+//  - Recursos (JS/CSS/iconos, con nombre versionado por Vite): se sirven del
+//    caché al instante y se actualizan en segundo plano (stale-while-revalidate).
 // ----------------------------------------------------------------------------
-self.addEventListener('install', () => {
-  self.skipWaiting();
+const CACHE = 'fp-shell-v1';
+const PRECACHE = ['/', '/index.html', '/manifest.webmanifest'];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      // Best-effort: si algún recurso falla, no rompe la instalación.
+      await Promise.allSettled(PRECACHE.map((u) => cache.add(u)));
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // Borra todas las cachES guardadas por versiones anteriores.
       const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-      // Se da de baja para dejar de interceptar peticiones.
-      await self.registration.unregister();
-      // Recarga las pestañas abiertas para cargar la versión nueva.
-      const clients = await self.clients.matchAll({ type: 'window' });
-      for (const client of clients) {
-        client.navigate(client.url);
-      }
+      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      await self.clients.claim();
     })()
   );
 });
 
-// Sin manejador de 'fetch': todas las peticiones van directo a la red.
+function isCacheableResponse(res) {
+  return res && res.status === 200 && res.type === 'basic';
+}
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return; // nunca cachea escrituras
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return; // Supabase/fuentes: a la red
+
+  // Abrir la app (documento): red primero, respaldo a caché.
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(req);
+          if (isCacheableResponse(fresh)) {
+            const cache = await caches.open(CACHE);
+            cache.put('/', fresh.clone());
+          }
+          return fresh;
+        } catch {
+          const cache = await caches.open(CACHE);
+          return (await cache.match('/')) || (await cache.match('/index.html')) || Response.error();
+        }
+      })()
+    );
+    return;
+  }
+
+  // Recursos: servir del caché y refrescar en segundo plano.
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(req);
+      const network = fetch(req)
+        .then((res) => {
+          if (isCacheableResponse(res)) cache.put(req, res.clone());
+          return res;
+        })
+        .catch(() => null);
+      return cached || (await network) || Response.error();
+    })()
+  );
+});

@@ -3,6 +3,7 @@ import { supabaseConfigOk, configError } from './lib/supabase.js';
 import { escapeHtml } from './lib/dom.js';
 import { getSession, onAuthChange, signOut } from './lib/auth.js';
 import { startIdle, stopIdle, idleExpired } from './lib/idle.js';
+import { clearCache } from './lib/store.js';
 import { isEnabled as faceEnabled } from './lib/faceid.js';
 import { LockView } from './views/lock.js';
 import { LoginView } from './views/login.js';
@@ -164,6 +165,8 @@ async function bootstrap() {
   onAuthChange((session) => {
     const wasLoggedIn = Boolean(currentSession);
     currentSession = session;
+    // Al cerrar sesión, borra los datos cacheados (privacidad en el dispositivo).
+    if (!session) clearCache();
     // Al iniciar sesión con contraseña, o al cerrar, no se queda bloqueada.
     if (!session || !wasLoggedIn) locked = false;
     manageIdle(session);
@@ -209,10 +212,33 @@ function manageIdle(session) {
   }
 }
 
+// Aviso flotante "sin conexión": informativo, no bloquea la interacción.
+function setupOfflineBanner() {
+  let banner = document.getElementById('offline-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'offline-banner';
+    banner.className = 'offline-banner';
+    banner.textContent = 'Sin conexión · mostrando los últimos datos';
+    document.body.appendChild(banner);
+  }
+  const update = () => {
+    banner.hidden = navigator.onLine;
+  };
+  window.addEventListener('online', update);
+  window.addEventListener('offline', update);
+  update();
+}
+setupOfflineBanner();
+
 bootstrap();
 
 // ---------- Service Worker ----------
-// Ya NO se registra un SW: durante el desarrollo el caché offline provocaba
-// versiones viejas pegadas. Si quedó uno registrado de antes, public/sw.js es
-// ahora un "kill-switch" que se da de baja solo y limpia las cachés.
-// (El navegador vuelve a pedir /sw.js cuando aún hay un registro previo.)
+// SW real (public/sw.js): cachea la cáscara de la app para que abra sin
+// conexión. index.html va "red primero", así que al publicar una versión nueva
+// se toma en cuanto haya red; sin red, se usa la última copia guardada.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.error(err));
+  });
+}

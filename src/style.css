@@ -1190,3 +1190,21 @@ body.modal-open {
 .kpi-card, .panel, .card, .amount-card, .budget, .mng-item, .hub-item {
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
+
+/* Aviso flotante "sin conexión": informativo, no bloquea la interacción */
+.offline-banner {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
+  z-index: 60;
+  pointer-events: none;
+  max-width: calc(100% - 32px);
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--amarillo);
+  color: #fff;
+  font: 600 13px/1.2 var(--font);
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
+}

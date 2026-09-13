@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js';
+import { cachedRead } from './store.js';
 
 // ============================================================================
 // Capa de datos: envuelve las funciones RPC, vistas y tablas reales del
@@ -22,60 +23,72 @@ async function requireUserId() {
 // ---------- KPIs del Dashboard ----------
 
 // ⭐ KPI principal: "Disponible real para gastar" (fn_disponible_real, §2.7)
-export async function getDisponibleReal(mes) {
-  const p_user = await requireUserId();
-  const { data, error } = await supabase.rpc('fn_disponible_real', {
-    p_user,
-    p_mes: mes,
+export function getDisponibleReal(mes) {
+  return cachedRead(`disp_${mes}`, async () => {
+    const p_user = await requireUserId();
+    const { data, error } = await supabase.rpc('fn_disponible_real', {
+      p_user,
+      p_mes: mes,
+    });
+    if (error) throw error;
+    // La funcion devuelve una tabla de una fila.
+    return Array.isArray(data) ? data[0] : data;
   });
-  if (error) throw error;
-  // La funcion devuelve una tabla de una fila.
-  return Array.isArray(data) ? data[0] : data;
 }
 
-export async function getKpisMes(mes) {
-  const p_user = await requireUserId();
-  const { data, error } = await supabase.rpc('fn_kpis_mes', {
-    p_user,
-    p_mes: mes,
+export function getKpisMes(mes) {
+  return cachedRead(`kpis_${mes}`, async () => {
+    const p_user = await requireUserId();
+    const { data, error } = await supabase.rpc('fn_kpis_mes', {
+      p_user,
+      p_mes: mes,
+    });
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
   });
-  if (error) throw error;
-  return Array.isArray(data) ? data[0] : data;
 }
 
-export async function getPatrimonio() {
-  const p_user = await requireUserId();
-  const { data, error } = await supabase.rpc('fn_patrimonio', { p_user });
-  if (error) throw error;
-  return Array.isArray(data) ? data[0] : data;
+export function getPatrimonio() {
+  return cachedRead('patrimonio', async () => {
+    const p_user = await requireUserId();
+    const { data, error } = await supabase.rpc('fn_patrimonio', { p_user });
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  });
 }
 
-export async function getColchonMeses() {
-  const p_user = await requireUserId();
-  const { data, error } = await supabase.rpc('fn_colchon_meses', { p_user });
-  if (error) throw error;
-  return data; // numeric escalar (puede ser null)
+export function getColchonMeses() {
+  return cachedRead('colchon', async () => {
+    const p_user = await requireUserId();
+    const { data, error } = await supabase.rpc('fn_colchon_meses', { p_user });
+    if (error) throw error;
+    return data; // numeric escalar (puede ser null)
+  });
 }
 
 // ---------- Datos de referencia (para el formulario) ----------
 
-export async function getCuentas() {
-  const { data, error } = await supabase
-    .from('cuentas')
-    .select('id, nombre, tipo, moneda, activa')
-    .eq('activa', true)
-    .order('nombre');
-  if (error) throw error;
-  return data ?? [];
+export function getCuentas() {
+  return cachedRead('cuentas', async () => {
+    const { data, error } = await supabase
+      .from('cuentas')
+      .select('id, nombre, tipo, moneda, activa')
+      .eq('activa', true)
+      .order('nombre');
+    if (error) throw error;
+    return data ?? [];
+  });
 }
 
-export async function getCategorias() {
-  const { data, error } = await supabase
-    .from('categorias')
-    .select('id, nombre, tipo, grupo, color, icono')
-    .order('nombre');
-  if (error) throw error;
-  return data ?? [];
+export function getCategorias() {
+  return cachedRead('categorias', async () => {
+    const { data, error } = await supabase
+      .from('categorias')
+      .select('id, nombre, tipo, grupo, color, icono')
+      .order('nombre');
+    if (error) throw error;
+    return data ?? [];
+  });
 }
 
 // ---------- Sugerencia de categoria (fn_sugerir_categoria, §4.3) ----------
@@ -143,17 +156,19 @@ export async function crearTransaccion(mov) {
 }
 
 // ---------- Presupuestos (vista v_presupuestos, §2.4) ----------
-export async function getPresupuestos(mes) {
-  const { data, error } = await supabase
-    .from('v_presupuestos')
-    .select(
-      'id, mes, categoria_id, categoria_nombre, grupo, monto_presupuestado, monto_gastado, disponible, pct_consumido, semaforo, rollover'
-    )
-    .eq('mes', mes)
-    .order('grupo')
-    .order('categoria_nombre');
-  if (error) throw error;
-  return data ?? [];
+export function getPresupuestos(mes) {
+  return cachedRead(`presupuestos_${mes}`, async () => {
+    const { data, error } = await supabase
+      .from('v_presupuestos')
+      .select(
+        'id, mes, categoria_id, categoria_nombre, grupo, monto_presupuestado, monto_gastado, disponible, pct_consumido, semaforo, rollover'
+      )
+      .eq('mes', mes)
+      .order('grupo')
+      .order('categoria_nombre');
+    if (error) throw error;
+    return data ?? [];
+  });
 }
 
 // ============================================================================
@@ -162,14 +177,16 @@ export async function getPresupuestos(mes) {
 // ============================================================================
 
 // ---------- Cuentas ----------
-export async function listCuentas() {
-  const { data, error } = await supabase
-    .from('cuentas')
-    .select('id, nombre, tipo, moneda, saldo_inicial, limite_credito, activa')
-    .order('activa', { ascending: false })
-    .order('nombre');
-  if (error) throw error;
-  return data ?? [];
+export function listCuentas() {
+  return cachedRead('listCuentas', async () => {
+    const { data, error } = await supabase
+      .from('cuentas')
+      .select('id, nombre, tipo, moneda, saldo_inicial, limite_credito, activa')
+      .order('activa', { ascending: false })
+      .order('nombre');
+    if (error) throw error;
+    return data ?? [];
+  });
 }
 
 export async function guardarCuenta(cuenta, id = null) {
@@ -284,13 +301,15 @@ export async function eliminarPresupuesto(id) {
 }
 
 // ---------- Configuración (meta de ahorro) ----------
-export async function getConfiguracion() {
-  const { data, error } = await supabase
-    .from('configuracion')
-    .select('user_id, mes_analizado, meta_ahorro_mensual')
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+export function getConfiguracion() {
+  return cachedRead('configuracion', async () => {
+    const { data, error } = await supabase
+      .from('configuracion')
+      .select('user_id, mes_analizado, meta_ahorro_mensual')
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  });
 }
 
 export async function guardarConfiguracion(cfg) {
