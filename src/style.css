@@ -135,11 +135,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  /* Deja espacio para la barra de estado / Dynamic Island del iPhone.
-     1ª línea: valor fijo de respaldo por si el navegador ignora max()/env().
-     2ª línea: usa el inset real cuando existe, con mínimo de 60px. */
-  padding-top: 60px;
-  padding-top: max(env(safe-area-inset-top, 0px), 60px);
+  /* Sin viewport-fit=cover, iOS ya deja el contenido debajo de la barra de
+     estado, así que basta un pequeño respiro superior. */
+  padding-top: 14px;
+  padding-top: max(env(safe-area-inset-top, 0px), 14px);
   background: rgba(255, 255, 255, 0.07);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
