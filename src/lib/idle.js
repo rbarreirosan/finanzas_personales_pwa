@@ -68,10 +68,10 @@ export function startIdle(onTimeout, ms = DEFAULT_TIMEOUT) {
   timeout = ms;
   running = true;
 
-  if (idleExpired(ms)) {
-    fire();
-    return stopIdle;
-  }
+  // Siempre marca "ahora" y arranca el conteo limpio. NO dispara de inmediato
+  // aunque la última actividad fuera vieja: eso causaba re-bloqueo instantáneo
+  // al desbloquear con Face ID. El caso "reabrir tras mucho tiempo" se maneja
+  // aparte (al iniciar la app) y con el evento de volver a primer plano.
   reset();
   EVENTS.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
   document.addEventListener('visibilitychange', onVisibility);

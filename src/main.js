@@ -2,7 +2,7 @@ import './style.css';
 import { supabaseConfigOk, configError } from './lib/supabase.js';
 import { escapeHtml } from './lib/dom.js';
 import { getSession, onAuthChange, signOut } from './lib/auth.js';
-import { startIdle, stopIdle } from './lib/idle.js';
+import { startIdle, stopIdle, idleExpired } from './lib/idle.js';
 import { isEnabled as faceEnabled } from './lib/faceid.js';
 import { LockView } from './views/lock.js';
 import { LoginView } from './views/login.js';
@@ -133,6 +133,22 @@ async function bootstrap() {
 
   // Si hay sesión y Face ID está activo, arranca bloqueada (pide Face ID).
   locked = Boolean(currentSession) && faceEnabled();
+
+  // Sin Face ID: si se reabre la app tras superar el tiempo de inactividad,
+  // cierra la sesión (el respaldo de "cerrar por inactividad" al reabrir).
+  if (currentSession && !faceEnabled() && idleExpired()) {
+    try {
+      sessionStorage.setItem('fp_idle_logout', '1');
+    } catch {
+      /* ignora */
+    }
+    try {
+      await signOut();
+    } catch (err) {
+      console.error(err);
+    }
+    currentSession = null;
+  }
 
   // Logout por delegación (el botón vive dentro del Dashboard).
   app.addEventListener('click', async (e) => {
