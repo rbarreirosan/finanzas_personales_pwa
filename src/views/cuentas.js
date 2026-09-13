@@ -60,7 +60,7 @@ async function init(el) {
           }</span>
             <span class="mi-sub">${tipoLabel(c.tipo)}</span>
           </span>
-          <span class="mi-amount">${money(c.saldo_inicial)}</span>
+          <span class="mi-amount">${money(c.saldo_actual ?? c.saldo_inicial)}</span>
         </button>`
         )
         .join('') +

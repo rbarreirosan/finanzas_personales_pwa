@@ -3,11 +3,15 @@ import {
   getKpisMes,
   getPatrimonio,
   getColchonMeses,
+  getMovimientos,
 } from '../lib/api.js';
 import { supabase } from '../lib/supabase.js';
 import { money, pct, currentMonth, monthLabel } from '../lib/format.js';
 import { isPrivate, togglePrivate } from '../lib/privacy.js';
 import { escapeHtml } from '../lib/dom.js';
+import { movItemHtml } from './movimientos.js';
+
+const RECIENTES = 5; // cuántos movimientos mostrar en el resumen del inicio
 
 const EYE =
   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -73,13 +77,15 @@ async function setGreeting(node, mes) {
 
 async function load(container, mes) {
   try {
-    const [disp, kpis, patr, colchon] = await Promise.all([
+    const [disp, kpis, patr, colchon, movs] = await Promise.all([
       getDisponibleReal(mes),
       getKpisMes(mes),
       getPatrimonio(),
       getColchonMeses(),
+      // Un fallo aquí no debe romper el Dashboard.
+      getMovimientos().catch(() => []),
     ]);
-    const data = { disp, kpis, patr, colchon };
+    const data = { disp, kpis, patr, colchon, movs };
     render(container, data);
     return data;
   } catch (err) {
@@ -90,7 +96,7 @@ async function load(container, mes) {
   }
 }
 
-function render(container, { disp, kpis, patr, colchon }) {
+function render(container, { disp, kpis, patr, colchon, movs = [] }) {
   const dispReal = Number(disp?.disponible_real ?? 0);
   const flujo = Number(kpis?.flujo_neto ?? 0);
   const deuda = Number(patr?.deuda_credito ?? 0);
@@ -167,5 +173,18 @@ function render(container, { disp, kpis, patr, colchon }) {
         <div class="gr-sub">Meta recomendada: 6 meses de gastos esenciales.</div>
       </div>
     </div>
+
+    <a class="mov-section" href="#/movimientos">
+      <div class="mov-head">
+        <span class="section-label" style="margin:0">Movimientos recientes</span>
+        <span class="chev">›</span>
+      </div>
+      ${
+        movs.length
+          ? `<div class="mov-list">${movs.slice(0, RECIENTES).map(movItemHtml).join('')}</div>
+             <div class="mov-more">Ver todos los movimientos ›</div>`
+          : '<div class="empty-mini">Aún no hay movimientos. Toca “Nuevo” para registrar uno.</div>'
+      }
+    </a>
   `;
 }

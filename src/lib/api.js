@@ -177,13 +177,35 @@ export function getPresupuestos(mes) {
 // ============================================================================
 
 // ---------- Cuentas ----------
+// Usa la vista v_saldo_cuentas: incluye `saldo_actual` (saldo inicial +/-
+// ingresos, gastos y transferencias), no solo el saldo inicial.
 export function listCuentas() {
   return cachedRead('listCuentas', async () => {
     const { data, error } = await supabase
-      .from('cuentas')
-      .select('id, nombre, tipo, moneda, saldo_inicial, limite_credito, activa')
+      .from('v_saldo_cuentas')
+      .select(
+        'id, nombre, tipo, moneda, saldo_inicial, saldo_actual, limite_credito, activa'
+      )
       .order('activa', { ascending: false })
       .order('nombre');
+    if (error) throw error;
+    return data ?? [];
+  });
+}
+
+// ---------- Movimientos (vista v_transacciones) ----------
+// Lista de transacciones con nombres de cuenta/categoría ya resueltos,
+// ordenadas de la más reciente a la más antigua.
+export function getMovimientos(limit = 200) {
+  return cachedRead('movimientos', async () => {
+    const { data, error } = await supabase
+      .from('v_transacciones')
+      .select(
+        'id, fecha, tipo, monto, comercio, descripcion, etiquetas, cuenta_nombre, cuenta_destino_nombre, categoria_nombre, created_at'
+      )
+      .order('fecha', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
     if (error) throw error;
     return data ?? [];
   });

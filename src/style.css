@@ -1191,6 +1191,40 @@ body.modal-open {
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
+/* Resumen de "Movimientos recientes" en el inicio (toda la sección es un enlace) */
+.mov-section {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  margin-top: 8px;
+}
+.mov-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mov-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mov-more {
+  text-align: center;
+  color: var(--indigo);
+  font: 600 13px/1 var(--font);
+  padding: 12px 0 2px;
+}
+.empty-mini {
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  color: var(--t-55);
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
 /* Aviso flotante "sin conexión": informativo, no bloquea la interacción */
 .offline-banner {
   position: fixed;

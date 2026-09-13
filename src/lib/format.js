@@ -65,3 +65,17 @@ export function monthLabel(mes) {
   const d = new Date(y, m - 1, 1);
   return d.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
 }
+
+// Etiqueta corta de una fecha 'YYYY-MM-DD' (p. ej. "13 sep"). Si es de otro
+// año, incluye el año. Nunca se enmascara: una fecha no es una cantidad.
+export function dayLabel(iso) {
+  if (!iso) return '';
+  const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return String(iso);
+  const date = new Date(y, m - 1, d);
+  const opts =
+    y === new Date().getFullYear()
+      ? { day: 'numeric', month: 'short' }
+      : { day: 'numeric', month: 'short', year: 'numeric' };
+  return date.toLocaleDateString('es-MX', opts).replace('.', '');
+}
