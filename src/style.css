@@ -135,7 +135,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  padding-top: var(--safe-top);
+  /* Deja espacio para la barra de estado / notch del iPhone. Se usa un mínimo
+     de 50px porque en Safari (no instalado) el safe-area-inset-top llega en 0
+     y el contenido quedaría debajo de la barra de estado. */
+  padding-top: max(env(safe-area-inset-top, 0px), 50px);
   background: rgba(255, 255, 255, 0.07);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
