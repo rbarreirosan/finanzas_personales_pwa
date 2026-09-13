@@ -6,7 +6,7 @@
 //    stale-while-revalidate.
 //  - Peticiones a Supabase u otros origenes (API/Auth): NUNCA se cachean;
 //    pasan directo a la red.
-const CACHE = 'finanzas-v1';
+const CACHE = 'finanzas-v2';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
