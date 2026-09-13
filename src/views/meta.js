@@ -1,5 +1,5 @@
 import { getConfiguracion, guardarConfiguracion } from '../lib/api.js';
-import { money0 } from '../lib/format.js';
+import { money } from '../lib/format.js';
 import { escapeHtml } from '../lib/dom.js';
 
 // Meta de ahorro mensual (tabla configuracion). Alimenta fn_disponible_real.
@@ -62,7 +62,7 @@ async function init(el) {
       const saved = await guardarConfiguracion({
         meta_ahorro_mensual: body.querySelector('#meta').value,
       });
-      msg.innerHTML = `<div class="msg ok">✅ Meta guardada: ${money0(
+      msg.innerHTML = `<div class="msg ok">✅ Meta guardada: ${money(
         saved.meta_ahorro_mensual
       )} al mes.</div>`;
     } catch (err) {

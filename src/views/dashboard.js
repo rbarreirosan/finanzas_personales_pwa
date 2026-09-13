@@ -5,7 +5,7 @@ import {
   getColchonMeses,
 } from '../lib/api.js';
 import { supabase } from '../lib/supabase.js';
-import { money, money0, pct, currentMonth, monthLabel } from '../lib/format.js';
+import { money, pct, currentMonth, monthLabel } from '../lib/format.js';
 import { escapeHtml } from '../lib/dom.js';
 
 // Dashboard: cabecera de vidrio + KPI principal "Disponible real" + este mes,
@@ -70,9 +70,9 @@ async function load(container, mes) {
         <span class="amount tnum">${money(dispReal)}</span>
         <div class="divider"></div>
         <span class="breakdown tnum">
-          Líquido ${money0(disp?.saldo_liquido)} · Esencial restante
-          ${money0(disp?.presupuesto_esencial_restante)} · Ahorro pendiente
-          ${money0(disp?.ahorro_meta_pendiente)}
+          Líquido ${money(disp?.saldo_liquido)} · Esencial restante
+          ${money(disp?.presupuesto_esencial_restante)} · Ahorro pendiente
+          ${money(disp?.ahorro_meta_pendiente)}
         </span>
       </div>
 
@@ -80,15 +80,15 @@ async function load(container, mes) {
       <div class="kpi-grid">
         <div class="kpi-card">
           <span class="k-label">Ingresos</span>
-          <span class="k-value tnum c-verde">${money0(kpis?.ingresos_mes)}</span>
+          <span class="k-value tnum c-verde">${money(kpis?.ingresos_mes)}</span>
         </div>
         <div class="kpi-card">
           <span class="k-label">Gastos</span>
-          <span class="k-value tnum c-rojo">${money0(kpis?.gastos_mes)}</span>
+          <span class="k-value tnum c-rojo">${money(kpis?.gastos_mes)}</span>
         </div>
         <div class="kpi-card">
           <span class="k-label">Flujo neto</span>
-          <span class="k-value tnum c-white">${flujo >= 0 ? '+' : ''}${money0(
+          <span class="k-value tnum c-white">${flujo >= 0 ? '+' : ''}${money(
       flujo
     )}</span>
         </div>
@@ -102,21 +102,21 @@ async function load(container, mes) {
       <div class="panel">
         <div class="row">
           <span class="r-label">Saldo líquido</span>
-          <span class="r-value tnum">${money0(patr?.saldo_liquido)}</span>
+          <span class="r-value tnum">${money(patr?.saldo_liquido)}</span>
         </div>
         <div class="row">
           <span class="r-label">Ahorro e inversión</span>
-          <span class="r-value tnum">${money0(patr?.ahorro_inversion)}</span>
+          <span class="r-value tnum">${money(patr?.ahorro_inversion)}</span>
         </div>
         <div class="row">
           <span class="r-label">Deuda de crédito</span>
-          <span class="r-value tnum c-rojo">${deuda > 0 ? '−' : ''}${money0(
+          <span class="r-value tnum c-rojo">${deuda > 0 ? '−' : ''}${money(
       deuda
     )}</span>
         </div>
         <div class="row total">
           <span class="r-label">Patrimonio neto</span>
-          <span class="r-value tnum ${neto >= 0 ? 'c-verde' : 'c-rojo'}">${money0(
+          <span class="r-value tnum ${neto >= 0 ? 'c-verde' : 'c-rojo'}">${money(
       neto
     )}</span>
         </div>

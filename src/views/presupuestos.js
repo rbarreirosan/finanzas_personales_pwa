@@ -1,6 +1,6 @@
 import { getPresupuestos } from '../lib/api.js';
 import {
-  money0,
+  money,
   pct,
   currentMonth,
   monthLabel,
@@ -52,7 +52,7 @@ async function load(container, sub, mes) {
       (a, p) => a + Number(p.monto_presupuestado || 0),
       0
     );
-    sub.textContent = `${monthLabel(mes)} · ${money0(totalGastado)} de ${money0(
+    sub.textContent = `${monthLabel(mes)} · ${money(totalGastado)} de ${money(
       totalPres
     )}`;
 
@@ -63,14 +63,14 @@ async function load(container, sub, mes) {
         const disp = Number(p.disponible ?? 0);
         const foot =
           disp < 0
-            ? `<span class="b-foot over tnum">Gastado ${money0(
+            ? `<span class="b-foot over tnum">Gastado ${money(
                 p.monto_gastado
-              )} / ${money0(p.monto_presupuestado)} · Excedido ${money0(
+              )} / ${money(p.monto_presupuestado)} · Excedido ${money(
                 Math.abs(disp)
               )}</span>`
-            : `<span class="b-foot tnum">Gastado ${money0(
+            : `<span class="b-foot tnum">Gastado ${money(
                 p.monto_gastado
-              )} / ${money0(p.monto_presupuestado)} · Disponible ${money0(
+              )} / ${money(p.monto_presupuestado)} · Disponible ${money(
                 disp
               )}</span>`;
 
