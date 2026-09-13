@@ -207,6 +207,8 @@ body {
   color: #fff;
   font-size: 22px;
   cursor: pointer;
+  text-decoration: none;
+  line-height: 1;
 }
 
 /* ---------- Section labels ---------- */
@@ -941,6 +943,8 @@ select.highlight {
   justify-content: center;
   cursor: pointer;
   flex: none;
+  text-decoration: none;
+  line-height: 1;
 }
 
 /* Hub de ajustes: filas grandes con chevron */
