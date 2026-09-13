@@ -1,49 +1,74 @@
 import { signIn, signUp } from '../lib/auth.js';
+import { escapeHtml } from '../lib/dom.js';
 
-// Pantalla de autenticacion (email + password). Devuelve un elemento DOM.
+// Pantalla de autenticación (email + password) — estilo Liquid Glass.
 export function LoginView() {
   const el = document.createElement('div');
-  el.className = 'auth-wrap';
+  el.className = 'auth';
   let mode = 'signin'; // 'signin' | 'signup'
+  let showPw = false;
 
   function render() {
     el.innerHTML = `
       <div class="brand">
-        <div class="logo">💰</div>
+        <div class="logo">$</div>
         <h1>Finanzas Personales</h1>
+        <div class="tagline">Tu dinero, con claridad</div>
       </div>
-      <form id="auth-form" class="card">
+
+      <form id="auth-form" class="auth-card">
         <div id="auth-msg"></div>
-        <div>
+
+        <div class="field">
           <label for="email">Correo</label>
           <input id="email" type="email" autocomplete="email" required
                  inputmode="email" placeholder="tucorreo@ejemplo.com" />
         </div>
-        <div>
+
+        <div class="field">
           <label for="password">Contraseña</label>
-          <input id="password" type="password"
-                 autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}"
-                 required minlength="6" placeholder="••••••••" />
+          <div class="pw-wrap">
+            <input id="password" type="${showPw ? 'text' : 'password'}"
+                   autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}"
+                   required minlength="6" placeholder="••••••••" />
+            <button type="button" class="pw-toggle" id="pw-toggle">${
+              showPw ? 'Ocultar' : 'Mostrar'
+            }</button>
+          </div>
         </div>
+
+        ${
+          mode === 'signin'
+            ? '<div style="text-align:right"><span class="link">¿Olvidaste tu contraseña?</span></div>'
+            : ''
+        }
+
         <button class="btn" type="submit" id="submit-btn">
           ${mode === 'signin' ? 'Entrar' : 'Crear cuenta'}
         </button>
-        <p class="center-muted">
-          ${
-            mode === 'signin'
-              ? '¿No tienes cuenta? '
-              : '¿Ya tienes cuenta? '
-          }
-          <button type="button" class="link-btn" id="toggle-mode">
-            ${mode === 'signin' ? 'Regístrate' : 'Inicia sesión'}
-          </button>
-        </p>
       </form>
+
+      <div class="auth-foot">
+        ${mode === 'signin' ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+        <button type="button" class="link-btn" id="toggle-mode">
+          ${mode === 'signin' ? 'Regístrate' : 'Inicia sesión'}
+        </button>
+      </div>
     `;
 
     const form = el.querySelector('#auth-form');
     const msg = el.querySelector('#auth-msg');
     const btn = el.querySelector('#submit-btn');
+
+    el.querySelector('#pw-toggle').addEventListener('click', () => {
+      showPw = !showPw;
+      const pw = el.querySelector('#password');
+      const val = pw.value;
+      render();
+      const pw2 = el.querySelector('#password');
+      pw2.value = val;
+      pw2.focus();
+    });
 
     el.querySelector('#toggle-mode').addEventListener('click', () => {
       mode = mode === 'signin' ? 'signup' : 'signin';
@@ -60,14 +85,13 @@ export function LoginView() {
       try {
         if (mode === 'signin') {
           await signIn(email, password);
-          // onAuthChange en main.js re-renderiza la app.
+          // onAuthChange (main.js) re-renderiza la app.
         } else {
           const { session } = await signUp(email, password);
           if (!session) {
             msg.innerHTML =
               '<div class="msg ok">Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.</div>';
             mode = 'signin';
-            // Re-render manteniendo el mensaje visible brevemente.
             setTimeout(render, 3500);
           }
         }
@@ -83,12 +107,4 @@ export function LoginView() {
 
   render();
   return el;
-}
-
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
-  );
 }

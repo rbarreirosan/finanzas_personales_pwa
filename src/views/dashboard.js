@@ -4,21 +4,48 @@ import {
   getPatrimonio,
   getColchonMeses,
 } from '../lib/api.js';
-import { money, pct, currentMonth, monthLabel } from '../lib/format.js';
+import { supabase } from '../lib/supabase.js';
+import { money, money0, pct, currentMonth, monthLabel } from '../lib/format.js';
 import { escapeHtml } from '../lib/dom.js';
 
-// Dashboard: KPI principal "Disponible real" + patrimonio, mes y colchon.
+// Dashboard: cabecera de vidrio + KPI principal "Disponible real" + este mes,
+// patrimonio y colchón financiero.
 export function DashboardView() {
   const el = document.createElement('div');
+  el.className = 'screen';
   const mes = currentMonth();
 
   el.innerHTML = `
-    <p class="section-title">Resumen · ${escapeHtml(monthLabel(mes))}</p>
-    <div id="dash-content"><div class="loading">Cargando KPIs…</div></div>
+    <header class="app-header">
+      <div class="bar">
+        <div>
+          <h1 class="large-title">Dashboard</h1>
+          <div class="subtitle" id="greeting">${escapeHtml(monthLabel(mes))}</div>
+        </div>
+        <button class="pill-btn" data-action="logout">Salir</button>
+      </div>
+    </header>
+    <div class="screen-body" id="dash-content">
+      <div class="loading">Cargando KPIs…</div>
+    </div>
   `;
 
+  setGreeting(el.querySelector('#greeting'), mes);
   load(el.querySelector('#dash-content'), mes);
   return el;
+}
+
+async function setGreeting(node, mes) {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const name = user?.email ? user.email.split('@')[0] : null;
+    const nice = name ? name.charAt(0).toUpperCase() + name.slice(1) : null;
+    node.textContent = `${nice ? `Hola, ${nice} · ` : ''}${monthLabel(mes)}`;
+  } catch {
+    /* deja el mes */
+  }
 }
 
 async function load(container, mes) {
@@ -32,62 +59,78 @@ async function load(container, mes) {
 
     const dispReal = Number(disp?.disponible_real ?? 0);
     const flujo = Number(kpis?.flujo_neto ?? 0);
+    const deuda = Number(patr?.deuda_credito ?? 0);
+    const neto = Number(patr?.patrimonio_neto ?? 0);
+    const col = colchon == null ? null : Number(colchon);
+    const colSem = col == null ? 'verde' : col >= 6 ? 'verde' : col >= 3 ? 'amarillo' : 'rojo';
 
     container.innerHTML = `
-      <div class="card kpi-hero">
-        <div class="label">⭐ Disponible real para gastar</div>
-        <div class="value">${money(dispReal)}</div>
-        <div class="sub">
-          Líquido ${money(disp?.saldo_liquido)} · Esencial restante
-          ${money(disp?.presupuesto_esencial_restante)} · Ahorro pendiente
-          ${money(disp?.ahorro_meta_pendiente)}
-        </div>
+      <div class="hero">
+        <span class="label">⭐ Disponible real para gastar</span>
+        <span class="amount tnum">${money(dispReal)}</span>
+        <div class="divider"></div>
+        <span class="breakdown tnum">
+          Líquido ${money0(disp?.saldo_liquido)} · Esencial restante
+          ${money0(disp?.presupuesto_esencial_restante)} · Ahorro pendiente
+          ${money0(disp?.ahorro_meta_pendiente)}
+        </span>
       </div>
 
-      <p class="section-title">Este mes</p>
+      <p class="section-label">Este mes</p>
       <div class="kpi-grid">
-        <div class="kpi">
-          <div class="label">Ingresos</div>
-          <div class="value pos">${money(kpis?.ingresos_mes)}</div>
+        <div class="kpi-card">
+          <span class="k-label">Ingresos</span>
+          <span class="k-value tnum c-verde">${money0(kpis?.ingresos_mes)}</span>
         </div>
-        <div class="kpi">
-          <div class="label">Gastos</div>
-          <div class="value neg">${money(kpis?.gastos_mes)}</div>
+        <div class="kpi-card">
+          <span class="k-label">Gastos</span>
+          <span class="k-value tnum c-rojo">${money0(kpis?.gastos_mes)}</span>
         </div>
-        <div class="kpi">
-          <div class="label">Flujo neto</div>
-          <div class="value ${flujo >= 0 ? 'pos' : 'neg'}">${money(flujo)}</div>
+        <div class="kpi-card">
+          <span class="k-label">Flujo neto</span>
+          <span class="k-value tnum c-white">${flujo >= 0 ? '+' : ''}${money0(
+      flujo
+    )}</span>
         </div>
-        <div class="kpi">
-          <div class="label">Tasa de ahorro</div>
-          <div class="value">${pct(kpis?.tasa_ahorro)}</div>
+        <div class="kpi-card">
+          <span class="k-label">Tasa de ahorro</span>
+          <span class="k-value tnum c-indigo">${pct(kpis?.tasa_ahorro)}</span>
         </div>
       </div>
 
-      <p class="section-title">Patrimonio</p>
-      <div class="card">
-        <div class="row"><span>Saldo líquido</span><strong>${money(
-          patr?.saldo_liquido
-        )}</strong></div>
-        <div class="row"><span>Ahorro e inversión</span><strong>${money(
-          patr?.ahorro_inversion
-        )}</strong></div>
-        <div class="row"><span>Deuda de crédito</span><strong>${money(
-          patr?.deuda_credito
-        )}</strong></div>
-        <div class="row"><span>Patrimonio neto</span><strong>${money(
-          patr?.patrimonio_neto
-        )}</strong></div>
-      </div>
-
-      <div class="card">
+      <p class="section-label">Patrimonio</p>
+      <div class="panel">
         <div class="row">
-          <span>Colchón financiero</span>
-          <strong>${
-            colchon == null ? '—' : `${Number(colchon).toFixed(1)} meses`
-          }</strong>
+          <span class="r-label">Saldo líquido</span>
+          <span class="r-value tnum">${money0(patr?.saldo_liquido)}</span>
         </div>
-        <p class="hint">Meses que cubres con tu saldo líquido al ritmo de gasto reciente.</p>
+        <div class="row">
+          <span class="r-label">Ahorro e inversión</span>
+          <span class="r-value tnum">${money0(patr?.ahorro_inversion)}</span>
+        </div>
+        <div class="row">
+          <span class="r-label">Deuda de crédito</span>
+          <span class="r-value tnum c-rojo">${deuda > 0 ? '−' : ''}${money0(
+      deuda
+    )}</span>
+        </div>
+        <div class="row total">
+          <span class="r-label">Patrimonio neto</span>
+          <span class="r-value tnum ${neto >= 0 ? 'c-verde' : 'c-rojo'}">${money0(
+      neto
+    )}</span>
+        </div>
+      </div>
+
+      <div class="glass-row">
+        <div class="badge sem-${colSem}">
+          <span class="b-num tnum">${col == null ? '—' : col.toFixed(1)}</span>
+          <span class="b-unit">MESES</span>
+        </div>
+        <div>
+          <div class="gr-title">Colchón financiero</div>
+          <div class="gr-sub">Meta recomendada: 6 meses de gastos esenciales.</div>
+        </div>
       </div>
     `;
   } catch (err) {

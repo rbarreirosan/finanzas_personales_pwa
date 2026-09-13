@@ -10,7 +10,7 @@
     <meta name="description" content="App de finanzas personales" />
 
     <!-- Tema / color de la barra del sistema -->
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#0F172A" />
 
     <!-- Manifest para instalabilidad (Android / escritorio) -->
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -25,6 +25,12 @@
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
   </head>
   <body>
+    <!-- Fondo: orbes de color desenfocados para que el vidrio tenga qué refractar -->
+    <div class="bg" aria-hidden="true">
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -5,25 +5,30 @@ import { LoginView } from './views/login.js';
 import { DashboardView } from './views/dashboard.js';
 import { NuevoMovimientoView } from './views/nuevoMovimiento.js';
 import { PresupuestosView } from './views/presupuestos.js';
-import { escapeHtml } from './lib/dom.js';
 
 const app = document.getElementById('app');
 
+const ICONS = {
+  home: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
+  plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  bars: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>',
+};
+
 const routes = {
-  '#/dashboard': { title: 'Dashboard', view: DashboardView },
-  '#/nuevo': { title: 'Nuevo', view: NuevoMovimientoView },
-  '#/presupuestos': { title: 'Presupuestos', view: PresupuestosView },
+  '#/dashboard': { view: DashboardView },
+  '#/nuevo': { view: NuevoMovimientoView },
+  '#/presupuestos': { view: PresupuestosView },
 };
 
 let currentSession = null;
 
 function renderConfigError() {
   app.innerHTML = `
-    <div class="auth-wrap">
+    <div class="auth">
       <div class="brand"><div class="logo">⚙️</div><h1>Configuración pendiente</h1></div>
-      <div class="card">
-        <p>Faltan las credenciales de Supabase.</p>
-        <p class="hint">
+      <div class="auth-card">
+        <p style="margin:0">Faltan las credenciales de Supabase.</p>
+        <p class="gr-sub" style="margin:0">
           Copia <code>.env.example</code> a <code>.env</code> y rellena
           <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>
           (Settings → API en tu proyecto), luego reinicia el servidor.
@@ -33,37 +38,24 @@ function renderConfigError() {
   `;
 }
 
-function renderApp() {
-  const hash = routes[location.hash] ? location.hash : '#/dashboard';
-  const route = routes[hash];
-
-  app.innerHTML = `
-    <header class="app-header">
-      <h1>${escapeHtml(route.title)}</h1>
-      <button class="btn-ghost" id="logout-btn">Salir</button>
-    </header>
-    <main class="app-main" id="view-root"></main>
+function tabbar(hash) {
+  const tab = (h, icon, label) =>
+    `<a href="${h}" data-h="${h}" class="${h === hash ? 'active' : ''}">
+       <span class="ic">${icon}</span>${label}
+     </a>`;
+  return `
     <nav class="tabbar">
-      <a href="#/dashboard" data-h="#/dashboard"><span class="icon">📊</span>Inicio</a>
-      <a href="#/nuevo" data-h="#/nuevo"><span class="icon">➕</span>Nuevo</a>
-      <a href="#/presupuestos" data-h="#/presupuestos"><span class="icon">🎯</span>Presupuestos</a>
+      ${tab('#/dashboard', ICONS.home, 'Inicio')}
+      ${tab('#/nuevo', ICONS.plus, 'Nuevo')}
+      ${tab('#/presupuestos', ICONS.bars, 'Presup.')}
     </nav>
   `;
+}
 
-  app.querySelectorAll('.tabbar a').forEach((a) => {
-    a.classList.toggle('active', a.dataset.h === hash);
-  });
-
-  app.querySelector('#logout-btn').addEventListener('click', async () => {
-    try {
-      await signOut();
-    } catch (e) {
-      console.error(e);
-    }
-  });
-
-  const viewRoot = app.querySelector('#view-root');
-  viewRoot.appendChild(route.view());
+function renderApp() {
+  const hash = routes[location.hash] ? location.hash : '#/dashboard';
+  app.innerHTML = `<div id="view-root"></div>${tabbar(hash)}`;
+  app.querySelector('#view-root').appendChild(routes[hash].view());
 }
 
 function renderLogin() {
@@ -89,12 +81,22 @@ async function bootstrap() {
     console.error(e);
   }
 
+  // Logout por delegación (el botón vive dentro del Dashboard).
+  app.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action="logout"]');
+    if (!btn) return;
+    try {
+      await signOut();
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
   onAuthChange((session) => {
     const wasLoggedIn = Boolean(currentSession);
     currentSession = session;
-    // Re-render completo al cambiar el estado de sesion.
     if (Boolean(session) !== wasLoggedIn) {
-      if (session && !location.hash) location.hash = '#/dashboard';
+      if (session && !routes[location.hash]) location.hash = '#/dashboard';
       route();
     }
   });
