@@ -22,7 +22,7 @@ export function DashboardView() {
           <h1 class="large-title">Dashboard</h1>
           <div class="subtitle" id="greeting">${escapeHtml(monthLabel(mes))}</div>
         </div>
-        <button class="pill-btn" data-action="logout">Salir</button>
+        <a class="icon-btn" href="#/ajustes" aria-label="Ajustes">⚙️</a>
       </div>
     </header>
     <div class="screen-body" id="dash-content">

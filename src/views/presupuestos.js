@@ -22,7 +22,7 @@ export function PresupuestosView() {
           <h1 class="large-title">Presupuestos</h1>
           <div class="subtitle" id="pres-sub">${escapeHtml(monthLabel(mes))}</div>
         </div>
-        <div class="icon-btn" aria-hidden="true">+</div>
+        <a class="icon-btn" href="#/presupuesto" aria-label="Nuevo presupuesto">+</a>
       </div>
     </header>
     <div class="screen-body" id="pres-content">
@@ -39,8 +39,11 @@ async function load(container, sub, mes) {
     const items = await getPresupuestos(mes);
 
     if (!items.length) {
-      container.innerHTML =
-        '<div class="empty">No hay presupuestos definidos para este mes.</div>';
+      container.innerHTML = `
+        <div class="empty">No hay presupuestos definidos para este mes.</div>
+        <a class="btn btn-block" href="#/presupuesto" style="text-decoration:none;display:flex;align-items:center;justify-content:center">
+          + Crear presupuesto
+        </a>`;
       return;
     }
 
@@ -72,7 +75,7 @@ async function load(container, sub, mes) {
               )}</span>`;
 
         return `
-          <div class="budget ${sem}">
+          <a class="budget ${sem}" href="#/presupuesto?cat=${p.categoria_id}&mes=${p.mes}">
             <div class="b-head">
               <span class="b-name"><span class="dot ${sem}"></span>${escapeHtml(
           p.categoria_nombre
@@ -81,7 +84,7 @@ async function load(container, sub, mes) {
             </div>
             <div class="bar ${sem}"><span style="width:${consumido}%"></span></div>
             ${foot}
-          </div>
+          </a>
         `;
       })
       .join('');

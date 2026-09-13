@@ -6,6 +6,11 @@ import { LoginView } from './views/login.js';
 import { DashboardView } from './views/dashboard.js';
 import { NuevoMovimientoView } from './views/nuevoMovimiento.js';
 import { PresupuestosView } from './views/presupuestos.js';
+import { AjustesView } from './views/ajustes.js';
+import { CuentasView } from './views/cuentas.js';
+import { CategoriasView } from './views/categorias.js';
+import { MetaView } from './views/meta.js';
+import { PresupuestoFormView } from './views/presupuestoForm.js';
 
 const app = document.getElementById('app');
 
@@ -16,10 +21,24 @@ const ICONS = {
 };
 
 const routes = {
-  '#/dashboard': { view: DashboardView },
-  '#/nuevo': { view: NuevoMovimientoView },
-  '#/presupuestos': { view: PresupuestosView },
+  '#/dashboard': { view: DashboardView, tab: true },
+  '#/nuevo': { view: NuevoMovimientoView, tab: true },
+  '#/presupuestos': { view: PresupuestosView, tab: true },
+  '#/ajustes': { view: AjustesView },
+  '#/cuentas': { view: CuentasView },
+  '#/categorias': { view: CategoriasView },
+  '#/meta': { view: MetaView },
+  '#/presupuesto': { view: PresupuestoFormView },
 };
+
+// Separa la ruta ("#/x") de sus parámetros ("?a=b") en el hash.
+function parseHash() {
+  const raw = location.hash || '#/dashboard';
+  const qi = raw.indexOf('?');
+  const path = qi === -1 ? raw : raw.slice(0, qi);
+  const params = new URLSearchParams(qi === -1 ? '' : raw.slice(qi + 1));
+  return { path: routes[path] ? path : '#/dashboard', params };
+}
 
 let currentSession = null;
 
@@ -54,9 +73,10 @@ function tabbar(hash) {
 }
 
 function renderApp() {
-  const hash = routes[location.hash] ? location.hash : '#/dashboard';
-  app.innerHTML = `<div id="view-root"></div>${tabbar(hash)}`;
-  app.querySelector('#view-root').appendChild(routes[hash].view());
+  const { path, params } = parseHash();
+  const route = routes[path];
+  app.innerHTML = `<div id="view-root"></div>${route.tab ? tabbar(path) : ''}`;
+  app.querySelector('#view-root').appendChild(route.view(params));
 }
 
 function renderLogin() {

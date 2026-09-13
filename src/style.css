@@ -726,6 +726,8 @@ select.highlight {
   display: flex;
   flex-direction: column;
   gap: 11px;
+  color: var(--text);
+  text-decoration: none;
 }
 .budget.sem-amarillo {
   border-color: rgba(234, 179, 8, 0.22);
@@ -907,4 +909,194 @@ select.highlight {
   cursor: pointer;
   font-size: inherit;
   padding: 0;
+}
+
+/* ============================================================================
+   Pantallas de administración (Ajustes, Cuentas, Categorías, Meta, Presupuesto)
+   ============================================================================ */
+.hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.back-btn {
+  height: 40px;
+  width: 40px;
+  border-radius: 20px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+
+/* Hub de ajustes: filas grandes con chevron */
+.hub-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-card);
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+}
+.hub-item .emoji {
+  font-size: 22px;
+}
+.hub-item .grow,
+.mng-item .grow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hub-item .h-title {
+  font: 600 16px/1.2 var(--font);
+}
+.hub-item .h-sub {
+  font-size: 12px;
+  color: var(--t-55);
+}
+.chev {
+  color: var(--t-45);
+  font-size: 18px;
+}
+
+/* Lista de items administrables (cuenta / categoría / presupuesto) */
+.mng-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+}
+.mng-item.selected {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.mng-item .mi-emoji {
+  font-size: 20px;
+  flex: none;
+}
+.mng-item .grow {
+  flex: 1;
+  min-width: 0;
+}
+.mng-item .mi-title {
+  font: 600 15px/1.2 var(--font);
+}
+.mng-item .mi-sub {
+  font-size: 12px;
+  color: var(--t-55);
+}
+.mng-item .mi-amount {
+  font: 600 15px/1 var(--font);
+  font-variant-numeric: tabular-nums;
+}
+.dot-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* Botones secundarios / peligro / fila de acciones */
+.btn-secondary {
+  height: 50px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-btn);
+  background: var(--glass-strong);
+  color: #fff;
+  font: 600 16px/1 var(--font);
+  cursor: pointer;
+}
+.btn-danger {
+  height: 50px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--r-btn);
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  font: 600 16px/1 var(--font);
+  cursor: pointer;
+}
+.btn-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn-actions > * {
+  flex: 1;
+}
+
+/* Switch (activa / rollover) */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.switch {
+  position: relative;
+  width: 50px;
+  height: 30px;
+  flex: none;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.switch .track {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.15s;
+}
+.switch .track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+.switch input:checked + .track {
+  background: var(--indigo);
+}
+.switch input:checked + .track::after {
+  transform: translateX(20px);
+}
+
+/* Input de color nativo compacto */
+input[type='color'] {
+  height: 46px;
+  padding: 4px;
+  width: 100%;
+}
+
+.form-title {
+  font: 600 13px/1 var(--font);
+  color: var(--t-70);
+  margin: 6px 2px 0;
 }

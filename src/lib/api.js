@@ -147,11 +147,164 @@ export async function getPresupuestos(mes) {
   const { data, error } = await supabase
     .from('v_presupuestos')
     .select(
-      'id, mes, categoria_nombre, grupo, monto_presupuestado, monto_gastado, disponible, pct_consumido, semaforo'
+      'id, mes, categoria_id, categoria_nombre, grupo, monto_presupuestado, monto_gastado, disponible, pct_consumido, semaforo, rollover'
     )
     .eq('mes', mes)
     .order('grupo')
     .order('categoria_nombre');
   if (error) throw error;
   return data ?? [];
+}
+
+// ============================================================================
+// Administración (CRUD): cuentas, categorías, presupuestos y configuración.
+// Cada insert añade user_id del usuario en sesión (RLS lo exige).
+// ============================================================================
+
+// ---------- Cuentas ----------
+export async function listCuentas() {
+  const { data, error } = await supabase
+    .from('cuentas')
+    .select('id, nombre, tipo, moneda, saldo_inicial, limite_credito, activa')
+    .order('activa', { ascending: false })
+    .order('nombre');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function guardarCuenta(cuenta, id = null) {
+  const nombre = (cuenta.nombre || '').trim();
+  if (!nombre) throw new Error('El nombre de la cuenta es obligatorio.');
+  if (cuenta.tipo === 'credito' && cuenta.limite_credito == null) {
+    throw new Error('Una cuenta de crédito requiere límite de crédito.');
+  }
+  const payload = {
+    nombre,
+    tipo: cuenta.tipo,
+    moneda: cuenta.moneda || 'MXN',
+    saldo_inicial: Number(cuenta.saldo_inicial) || 0,
+    limite_credito:
+      cuenta.tipo === 'credito' && cuenta.limite_credito != null
+        ? Number(cuenta.limite_credito)
+        : null,
+    activa: cuenta.activa !== false,
+  };
+  if (id) {
+    const { data, error } = await supabase
+      .from('cuentas')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+  payload.user_id = await requireUserId();
+  const { data, error } = await supabase
+    .from('cuentas')
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarCuenta(id) {
+  const { error } = await supabase.from('cuentas').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Categorías ----------
+export async function guardarCategoria(cat, id = null) {
+  const nombre = (cat.nombre || '').trim();
+  if (!nombre) throw new Error('El nombre de la categoría es obligatorio.');
+  const tipo = cat.tipo;
+  // Regla del esquema: ingreso -> grupo ingreso; gasto -> esencial/discrecional.
+  const grupo = tipo === 'ingreso' ? 'ingreso' : cat.grupo || 'discrecional';
+  const payload = {
+    nombre,
+    tipo,
+    grupo,
+    color: cat.color || '#94A3B8',
+    icono: (cat.icono || '').trim() || '💸',
+  };
+  if (id) {
+    const { data, error } = await supabase
+      .from('categorias')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+  payload.user_id = await requireUserId();
+  const { data, error } = await supabase
+    .from('categorias')
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarCategoria(id) {
+  const { error } = await supabase.from('categorias').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Presupuestos ----------
+export async function guardarPresupuesto(pres) {
+  if (!pres.categoria_id) throw new Error('Selecciona una categoría.');
+  const monto = Number(pres.monto_presupuestado);
+  if (!Number.isFinite(monto) || monto < 0) {
+    throw new Error('El monto presupuestado no puede ser negativo.');
+  }
+  const user_id = await requireUserId();
+  const payload = {
+    user_id,
+    mes: pres.mes,
+    categoria_id: pres.categoria_id,
+    monto_presupuestado: monto,
+    rollover: !!pres.rollover,
+  };
+  // unique(user_id, mes, categoria_id): upsert para crear o actualizar.
+  const { data, error } = await supabase
+    .from('presupuestos')
+    .upsert(payload, { onConflict: 'user_id,mes,categoria_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarPresupuesto(id) {
+  const { error } = await supabase.from('presupuestos').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Configuración (meta de ahorro) ----------
+export async function getConfiguracion() {
+  const { data, error } = await supabase
+    .from('configuracion')
+    .select('user_id, mes_analizado, meta_ahorro_mensual')
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function guardarConfiguracion(cfg) {
+  const user_id = await requireUserId();
+  const payload = {
+    user_id,
+    meta_ahorro_mensual: Number(cfg.meta_ahorro_mensual) || 0,
+  };
+  if (cfg.mes_analizado) payload.mes_analizado = cfg.mes_analizado;
+  const { data, error } = await supabase
+    .from('configuracion')
+    .upsert(payload, { onConflict: 'user_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
