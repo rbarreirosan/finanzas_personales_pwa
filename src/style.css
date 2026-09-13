@@ -148,7 +148,7 @@ body {
 
 .app-header .bar {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 12px 20px 14px;
@@ -777,24 +777,24 @@ select.highlight {
 .sem-rojo {
   color: var(--rojo);
 }
-.bar {
+.progress {
   height: 9px;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
-.bar > span {
+.progress > span {
   display: block;
   height: 100%;
   border-radius: 5px;
 }
-.bar.sem-verde > span {
+.progress.sem-verde > span {
   background: linear-gradient(90deg, var(--verde-700), var(--verde));
 }
-.bar.sem-amarillo > span {
+.progress.sem-amarillo > span {
   background: linear-gradient(90deg, var(--amarillo-700), var(--amarillo));
 }
-.bar.sem-rojo > span {
+.progress.sem-rojo > span {
   background: linear-gradient(90deg, var(--rojo-700), var(--rojo));
 }
 .b-foot {

@@ -82,7 +82,7 @@ async function load(container, sub, mes) {
         )}</span>
               <span class="b-pct ${sem} tnum">${pct(p.pct_consumido)}</span>
             </div>
-            <div class="bar ${sem}"><span style="width:${consumido}%"></span></div>
+            <div class="progress ${sem}"><span style="width:${consumido}%"></span></div>
             ${foot}
           </a>
         `;
