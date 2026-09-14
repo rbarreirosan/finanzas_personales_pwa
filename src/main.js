@@ -173,7 +173,9 @@ async function bootstrap() {
     if (!session || !wasLoggedIn) locked = false;
     manageIdle(session);
     if (Boolean(session) !== wasLoggedIn) {
-      if (session && !routes[location.hash]) location.hash = '#/dashboard';
+      // No forzar dashboard si el hash ya apunta a una ruta válida, incluso con
+      // parámetros (deep link de un Atajo como #/nuevo?monto=...).
+      if (session && !routes[parseHash().path]) location.hash = '#/dashboard';
       route();
     }
   });

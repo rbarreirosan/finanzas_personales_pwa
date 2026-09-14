@@ -9,7 +9,7 @@ import { escapeHtml } from '../lib/dom.js';
 
 // Formulario "Nuevo movimiento": inserta en transacciones respetando las
 // validaciones del esquema y autosugiere categoría con fn_sugerir_categoria.
-export function NuevoMovimientoView() {
+export function NuevoMovimientoView(params) {
   const el = document.createElement('div');
   el.className = 'screen';
   el.innerHTML = `
@@ -19,7 +19,7 @@ export function NuevoMovimientoView() {
     <div class="screen-body"><div class="loading">Cargando cuentas y categorías…</div></div>
   `;
 
-  init(el).catch((err) => {
+  init(el, params).catch((err) => {
     el.querySelector('.screen-body').innerHTML = `<div class="msg error">${escapeHtml(
       err.message || 'Error al cargar el formulario.'
     )}</div>`;
@@ -31,7 +31,7 @@ export function NuevoMovimientoView() {
 const cuentaOption = (c) =>
   `<option value="${c.id}">${escapeHtml(c.nombre)}</option>`;
 
-async function init(el) {
+async function init(el, params) {
   const [cuentas, categorias] = await Promise.all([
     getCuentas(),
     getCategorias(),
@@ -259,7 +259,31 @@ async function init(el) {
   segBtns.forEach((b) =>
     b.addEventListener('click', () => applyTipo(b.dataset.tipo))
   );
-  applyTipo('gasto');
+
+  // ---- Deep link (Atajos de iPhone): #/nuevo?tipo=gasto&monto=140.12&comercio=Oxxo
+  const TIPOS_OK = ['ingreso', 'gasto', 'transferencia'];
+  const qpTipo = params?.get('tipo');
+  const qpMonto = params?.get('monto');
+  const qpComercio = params?.get('comercio');
+  const qpDescripcion = params?.get('descripcion');
+
+  applyTipo(TIPOS_OK.includes(qpTipo) ? qpTipo : 'gasto');
+
+  if (qpMonto != null) {
+    const m = Number(String(qpMonto).replace(/[^0-9.]/g, ''));
+    if (Number.isFinite(m) && m > 0) montoInp.value = String(m);
+  }
+  const comercioInp = body.querySelector('#comercio');
+  if (comercioInp && qpComercio) {
+    comercioInp.value = qpComercio;
+    comercioInp.dispatchEvent(new Event('input')); // dispara la autosugerencia
+  }
+  const descInp = body.querySelector('#descripcion');
+  if (descInp && qpDescripcion) descInp.value = qpDescripcion;
+
+  // Enfoca el monto para escribir de inmediato al llegar desde el Atajo.
+  if (montoInp.value) montoInp.select?.();
+  montoInp.focus({ preventScroll: true });
 
   // ---- envío ----
   form.addEventListener('submit', async (e) => {
