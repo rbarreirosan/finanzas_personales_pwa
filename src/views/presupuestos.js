@@ -6,7 +6,49 @@ import {
   monthLabel,
   daysLeftInMonth,
 } from '../lib/format.js';
+import { getObjetivo } from '../lib/objetivo.js';
 import { escapeHtml } from '../lib/dom.js';
+
+// Tarjeta hero con degradado dinámico verde→rojo según qué tan cerca está lo
+// "libre para dirigir" del objetivo del mes (verde = objetivo cubierto).
+function gaugeCard(saldoLiquido, totalPres, objetivo) {
+  // Sin patrimonio: tarjeta neutra, sin medidor.
+  if (saldoLiquido == null) {
+    return `
+      <div class="hero gauge gauge-neutral">
+        <span class="label">Presupuestado del mes</span>
+        <span class="amount tnum">${money(totalPres)}</span>
+      </div>`;
+  }
+  const libre = saldoLiquido - totalPres;
+  const meta = objetivo > 0 ? objetivo : 1;
+  const p = Math.max(0, Math.min(1, libre / meta)) * 100; // % de verde
+  // Objetivo cubierto: todo verde. $0 o menos: todo rojo. En medio: degradado
+  // con el punto verde/rojo en el porcentaje correspondiente.
+  let bg;
+  if (p >= 100) bg = '#16a34a';
+  else if (p <= 0) bg = '#dc2626';
+  else {
+    const g1 = Math.max(0, p - 15);
+    const g2 = Math.min(100, p + 15);
+    bg = `linear-gradient(90deg, #16a34a 0%, #16a34a ${g1}%, #dc2626 ${g2}%, #dc2626 100%)`;
+  }
+  const label =
+    libre >= 0 ? '⚖️ Libre para dirigir' : '⚠️ Te falta para cubrir';
+
+  return `
+    <div class="hero gauge" style="background:${bg}">
+      <div class="gauge-top">
+        <span class="label">${label}</span>
+        <span class="gauge-pct">${Math.round(p)}% de ${money(objetivo)}</span>
+      </div>
+      <span class="amount tnum">${money(Math.abs(libre))}</span>
+      <div class="divider"></div>
+      <span class="breakdown tnum">Saldo líquido ${money(
+        saldoLiquido
+      )} · Presupuestado ${money(totalPres)}</span>
+    </div>`;
+}
 
 // Presupuestos del mes desde la vista v_presupuestos (gastado, disponible,
 // pct_consumido y semáforo ya calculados).
@@ -60,44 +102,22 @@ async function load(container, sub, mes) {
       totalPres
     )}`;
 
-    // Resumen: saldo líquido, total presupuestado y lo que queda libre para
-    // dirigir (a ahorro/inversión) si se cubre todo el presupuesto sin imprevistos.
+    // Resumen: tarjeta con medidor dinámico (verde→rojo) de lo "libre para
+    // dirigir" respecto al objetivo del mes (ajustable en Ajustes).
     const saldoLiquido = patr == null ? null : Number(patr.saldo_liquido ?? 0);
+    const objetivo = getObjetivo(mes);
     const libre = saldoLiquido == null ? null : saldoLiquido - totalPres;
     const resumen = `
       <p class="section-label" style="margin-top:0">Resumen del mes</p>
-      <div class="panel">
-        ${
-          saldoLiquido == null
-            ? ''
-            : `<div class="row">
-                 <span class="r-label">Saldo líquido (a la mano)</span>
-                 <span class="r-value tnum">${money(saldoLiquido)}</span>
-               </div>`
-        }
-        <div class="row">
-          <span class="r-label">Total presupuestado</span>
-          <span class="r-value tnum">${money(totalPres)}</span>
-        </div>
-        ${
-          libre == null
-            ? ''
-            : `<div class="row total">
-                 <span class="r-label">${
-                   libre >= 0 ? 'Libre para dirigir' : 'Falta para cubrir'
-                 }</span>
-                 <span class="r-value tnum ${
-                   libre >= 0 ? 'c-verde' : 'c-rojo'
-                 }">${money(Math.abs(libre))}</span>
-               </div>`
-        }
-      </div>
+      ${gaugeCard(saldoLiquido, totalPres, objetivo)}
       ${
         libre == null
           ? ''
           : `<p class="resumen-note">${
               libre >= 0
-                ? 'Es tu saldo líquido menos todo lo presupuestado. Si no surge un imprevisto, esto queda libre para dirigirlo (ahorro, inversión…).'
+                ? `Saldo líquido menos todo lo presupuestado. El medidor se llena de verde conforme te acercas a tu objetivo de ${money(
+                    objetivo
+                  )} libres para dirigir (ahorro, inversión…).`
                 : 'Lo presupuestado supera tu saldo líquido: te falta esta cantidad para cubrir todo el presupuesto del mes.'
             }</p>`
       }`;

@@ -56,6 +56,14 @@ export function AjustesView() {
         </span>
         <span class="chev">›</span>
       </a>
+      <a class="hub-item" href="#/objetivo">
+        <span class="emoji">⚖️</span>
+        <span class="grow">
+          <span class="h-title">Objetivo para dirigir</span>
+          <span class="h-sub">Meta del medidor verde/rojo de Presupuestos</span>
+        </span>
+        <span class="chev">›</span>
+      </a>
 
       ${faceRow}
 

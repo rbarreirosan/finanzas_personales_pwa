@@ -16,6 +16,7 @@ import { CategoriasView } from './views/categorias.js';
 import { MetaView } from './views/meta.js';
 import { PresupuestoFormView } from './views/presupuestoForm.js';
 import { MovimientosView } from './views/movimientos.js';
+import { ObjetivoView } from './views/objetivo.js';
 
 const app = document.getElementById('app');
 
@@ -36,6 +37,7 @@ const routes = {
   '#/meta': { view: MetaView },
   '#/presupuesto': { view: PresupuestoFormView },
   '#/movimientos': { view: MovimientosView },
+  '#/objetivo': { view: ObjetivoView },
 };
 
 // Separa la ruta ("#/x") de sus parámetros ("?a=b") en el hash.
