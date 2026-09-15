@@ -60,9 +60,10 @@ async function load(container, sub, mes) {
       totalPres
     )}`;
 
-    // Resumen: total presupuestado del mes y diferencia contra el saldo líquido.
+    // Resumen: saldo líquido, total presupuestado y lo que queda libre para
+    // dirigir (a ahorro/inversión) si se cubre todo el presupuesto sin imprevistos.
     const saldoLiquido = patr == null ? null : Number(patr.saldo_liquido ?? 0);
-    const diferencia = saldoLiquido == null ? null : saldoLiquido - totalPres;
+    const libre = saldoLiquido == null ? null : saldoLiquido - totalPres;
     const resumen = `
       <p class="section-label" style="margin-top:0">Resumen del mes</p>
       <div class="panel">
@@ -70,25 +71,36 @@ async function load(container, sub, mes) {
           saldoLiquido == null
             ? ''
             : `<div class="row">
-                 <span class="r-label">Saldo líquido</span>
+                 <span class="r-label">Saldo líquido (a la mano)</span>
                  <span class="r-value tnum">${money(saldoLiquido)}</span>
                </div>`
         }
         <div class="row">
-          <span class="r-label">Presupuestado del mes</span>
+          <span class="r-label">Total presupuestado</span>
           <span class="r-value tnum">${money(totalPres)}</span>
         </div>
         ${
-          diferencia == null
+          libre == null
             ? ''
             : `<div class="row total">
-                 <span class="r-label">Diferencia (líquido − presup.)</span>
+                 <span class="r-label">${
+                   libre >= 0 ? 'Libre para dirigir' : 'Falta para cubrir'
+                 }</span>
                  <span class="r-value tnum ${
-                   diferencia >= 0 ? 'c-verde' : 'c-rojo'
-                 }">${money(diferencia)}</span>
+                   libre >= 0 ? 'c-verde' : 'c-rojo'
+                 }">${money(Math.abs(libre))}</span>
                </div>`
         }
-      </div>`;
+      </div>
+      ${
+        libre == null
+          ? ''
+          : `<p class="resumen-note">${
+              libre >= 0
+                ? 'Es tu saldo líquido menos todo lo presupuestado. Si no surge un imprevisto, esto queda libre para dirigirlo (ahorro, inversión…).'
+                : 'Lo presupuestado supera tu saldo líquido: te falta esta cantidad para cubrir todo el presupuesto del mes.'
+            }</p>`
+      }`;
 
     const cards = items
       .map((p) => {
