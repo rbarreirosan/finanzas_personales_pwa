@@ -61,18 +61,17 @@ async function load(container, sub, mes) {
         const consumido = Math.min(100, Number(p.pct_consumido ?? 0));
         const sem = `sem-${p.semaforo || 'verde'}`;
         const disp = Number(p.disponible ?? 0);
-        const foot =
-          disp < 0
-            ? `<span class="b-foot over tnum">Gastado ${money(
-                p.monto_gastado
-              )} / ${money(p.monto_presupuestado)} · Excedido ${money(
-                Math.abs(disp)
-              )}</span>`
-            : `<span class="b-foot tnum">Gastado ${money(
-                p.monto_gastado
-              )} / ${money(p.monto_presupuestado)} · Disponible ${money(
-                disp
-              )}</span>`;
+        const foot = `
+          <div class="b-foot">
+            <span class="tnum">Gastado <b>${money(p.monto_gastado)}</b> de <b>${money(
+          p.monto_presupuestado
+        )}</b></span>
+            ${
+              disp < 0
+                ? `<span class="b-over tnum">Excedido ${money(Math.abs(disp))}</span>`
+                : `<span class="b-disp tnum">Disponible ${money(disp)}</span>`
+            }
+          </div>`;
 
         return `
           <a class="budget ${sem}" href="#/presupuesto?cat=${p.categoria_id}&mes=${p.mes}">
