@@ -27,12 +27,17 @@ function gaugeCard(saldoLiquido, totalPres, pendiente, objetivo) {
   }
   const libre = saldoLiquido - pendiente;
   const meta = objetivo > 0 ? objetivo : 1;
-  const p = Math.max(0, Math.min(1, libre / meta)) * 100; // % de verde
-  // Objetivo cubierto: todo verde. $0 o menos: todo rojo. En medio: degradado
-  // con el punto verde/rojo en el porcentaje correspondiente.
+  const rawP = (libre / meta) * 100; // puede ser negativo o mayor a 100
+  const p = Math.max(0, Math.min(100, rawP)); // para la pastilla y el degradado
+  // Rangos de color:
+  //  - menos de 0%: te falta -> rojo sólido
+  //  - 0% a 20%: zona de alerta -> naranja sólido
+  //  - objetivo cubierto (>=100%): verde sólido
+  //  - 20% a 100%: degradado verde→rojo con el punto en el porcentaje
   let bg;
-  if (p >= 100) bg = '#16a34a';
-  else if (p <= 0) bg = '#dc2626';
+  if (rawP < 0) bg = '#dc2626';
+  else if (rawP <= 20) bg = '#ea580c';
+  else if (rawP >= 100) bg = '#16a34a';
   else {
     const g1 = Math.max(0, p - 15);
     const g2 = Math.min(100, p + 15);
