@@ -11,7 +11,12 @@ import { escapeHtml } from '../lib/dom.js';
 
 // Tarjeta hero con degradado dinámico verde→rojo según qué tan cerca está lo
 // "libre para dirigir" del objetivo del mes (verde = objetivo cubierto).
-function gaugeCard(saldoLiquido, totalPres, objetivo) {
+//
+// Clave: se resta lo que AÚN FALTA por gastar del presupuesto (pendiente), no
+// el presupuesto completo. Así, gastar dentro de lo presupuestado no altera el
+// resultado: el saldo baja, pero el pendiente baja igual. Solo cambia si te
+// pasas de lo presupuestado (pendiente ya no baja) o si entra/sale dinero.
+function gaugeCard(saldoLiquido, totalPres, pendiente, objetivo) {
   // Sin patrimonio: tarjeta neutra, sin medidor.
   if (saldoLiquido == null) {
     return `
@@ -20,7 +25,7 @@ function gaugeCard(saldoLiquido, totalPres, objetivo) {
         <span class="amount tnum">${money(totalPres)}</span>
       </div>`;
   }
-  const libre = saldoLiquido - totalPres;
+  const libre = saldoLiquido - pendiente;
   const meta = objetivo > 0 ? objetivo : 1;
   const p = Math.max(0, Math.min(1, libre / meta)) * 100; // % de verde
   // Objetivo cubierto: todo verde. $0 o menos: todo rojo. En medio: degradado
@@ -46,7 +51,7 @@ function gaugeCard(saldoLiquido, totalPres, objetivo) {
       <div class="divider"></div>
       <span class="breakdown tnum">Saldo líquido ${money(
         saldoLiquido
-      )} · Presupuestado ${money(totalPres)}</span>
+      )} · Falta por gastar ${money(pendiente)}</span>
     </div>`;
 }
 
@@ -98,6 +103,17 @@ async function load(container, sub, mes) {
       (a, p) => a + Number(p.monto_presupuestado || 0),
       0
     );
+    // Pendiente por gastar: por categoría, lo que falta del presupuesto sin
+    // dejar que un sobregasto en una categoría reste a otra (piso en 0).
+    const totalPendiente = items.reduce(
+      (a, p) =>
+        a +
+        Math.max(
+          0,
+          Number(p.monto_presupuestado || 0) - Number(p.monto_gastado || 0)
+        ),
+      0
+    );
     sub.textContent = `${monthLabel(mes)} · ${money(totalGastado)} de ${money(
       totalPres
     )}`;
@@ -106,19 +122,19 @@ async function load(container, sub, mes) {
     // dirigir" respecto al objetivo del mes (ajustable en Ajustes).
     const saldoLiquido = patr == null ? null : Number(patr.saldo_liquido ?? 0);
     const objetivo = getObjetivo(mes);
-    const libre = saldoLiquido == null ? null : saldoLiquido - totalPres;
+    const libre = saldoLiquido == null ? null : saldoLiquido - totalPendiente;
     const resumen = `
       <p class="section-label" style="margin-top:0">Resumen del mes</p>
-      ${gaugeCard(saldoLiquido, totalPres, objetivo)}
+      ${gaugeCard(saldoLiquido, totalPres, totalPendiente, objetivo)}
       ${
         libre == null
           ? ''
           : `<p class="resumen-note">${
               libre >= 0
-                ? `Saldo líquido menos todo lo presupuestado. El medidor se llena de verde conforme te acercas a tu objetivo de ${money(
+                ? `Es tu saldo líquido menos lo que aún falta gastar del presupuesto; por eso no cambia si gastas dentro de lo planeado. El medidor se llena de verde conforme te acercas a tu objetivo de ${money(
                     objetivo
                   )} libres para dirigir (ahorro, inversión…).`
-                : 'Lo presupuestado supera tu saldo líquido: te falta esta cantidad para cubrir todo el presupuesto del mes.'
+                : 'Tu saldo líquido no alcanza a cubrir lo que aún falta gastar del presupuesto: te falta esta cantidad.'
             }</p>`
       }`;
 
