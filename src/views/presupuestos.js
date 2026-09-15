@@ -1,4 +1,4 @@
-import { getPresupuestos } from '../lib/api.js';
+import { getPresupuestos, getPatrimonio } from '../lib/api.js';
 import {
   money,
   pct,
@@ -36,7 +36,11 @@ export function PresupuestosView() {
 
 async function load(container, sub, mes) {
   try {
-    const items = await getPresupuestos(mes);
+    const [items, patr] = await Promise.all([
+      getPresupuestos(mes),
+      // Un fallo aquí no debe romper la pantalla; solo se omite el resumen.
+      getPatrimonio().catch(() => null),
+    ]);
 
     if (!items.length) {
       container.innerHTML = `
@@ -55,6 +59,36 @@ async function load(container, sub, mes) {
     sub.textContent = `${monthLabel(mes)} · ${money(totalGastado)} de ${money(
       totalPres
     )}`;
+
+    // Resumen: total presupuestado del mes y diferencia contra el saldo líquido.
+    const saldoLiquido = patr == null ? null : Number(patr.saldo_liquido ?? 0);
+    const diferencia = saldoLiquido == null ? null : saldoLiquido - totalPres;
+    const resumen = `
+      <p class="section-label" style="margin-top:0">Resumen del mes</p>
+      <div class="panel">
+        ${
+          saldoLiquido == null
+            ? ''
+            : `<div class="row">
+                 <span class="r-label">Saldo líquido</span>
+                 <span class="r-value tnum">${money(saldoLiquido)}</span>
+               </div>`
+        }
+        <div class="row">
+          <span class="r-label">Presupuestado del mes</span>
+          <span class="r-value tnum">${money(totalPres)}</span>
+        </div>
+        ${
+          diferencia == null
+            ? ''
+            : `<div class="row total">
+                 <span class="r-label">Diferencia (líquido − presup.)</span>
+                 <span class="r-value tnum ${
+                   diferencia >= 0 ? 'c-verde' : 'c-rojo'
+                 }">${money(diferencia)}</span>
+               </div>`
+        }
+      </div>`;
 
     const cards = items
       .map((p) => {
@@ -89,6 +123,8 @@ async function load(container, sub, mes) {
       .join('');
 
     container.innerHTML = `
+      ${resumen}
+      <p class="section-label">Por categoría</p>
       ${cards}
       <div class="glass-row space">
         <span style="font-size:13px;color:var(--t-70)">Quedan ${daysLeftInMonth()} días del mes</span>
