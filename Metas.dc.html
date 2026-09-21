@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9eaf3;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#5b4de8;text-decoration:none}a:hover{color:#4338ca}
+input,button{font-family:inherit}
+input:focus{outline:none}
+input[type="date"]{min-width:0;-webkit-appearance:none;appearance:none;display:block}
+input[type="date"]::-webkit-date-and-time-value{text-align:left;min-height:20px;margin:0}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:.45;margin:0}
+@keyframes sheetUp{from{transform:translateY(102%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px 40px;background:#e9eaf3">
+<div style="width:390px;height:844px;position:relative;overflow:hidden;border-radius:44px;display:flex;flex-direction:column;background:linear-gradient(180deg,#f7f7fb 0%,#eeedf8 48%,#e7e7f6 100%);box-shadow:0 30px 70px rgba(30,27,75,.20);border:1px solid rgba(255,255,255,.7)">
+
+<div style="height:52px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 32px">
+<span style="font-size:15px;font-weight:700;color:#0f172a;letter-spacing:-.2px">10:46</span>
+<div style="display:flex;align-items:center;gap:6px">
+<div style="display:flex;align-items:flex-end;gap:2px"><div style="width:3px;height:5px;border-radius:1px;background:#0f172a"></div><div style="width:3px;height:7px;border-radius:1px;background:#0f172a"></div><div style="width:3px;height:9px;border-radius:1px;background:#0f172a"></div><div style="width:3px;height:11px;border-radius:1px;background:#0f172a"></div></div>
+<div style="width:22px;height:12px;border-radius:3px;background:#0f172a;display:flex;align-items:center;justify-content:center"><span style="font-size:8px;font-weight:700;color:#fff">34</span></div>
+</div>
+</div>
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;padding:6px 22px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+<div>
+<div style="font-size:34px;font-weight:800;letter-spacing:-1px;color:#0f172a;line-height:1.1">Metas</div>
+<div style="font-size:14px;color:#8b90a5;margin-top:2px">{{ listSub }}</div>
+</div>
+<button onClick="{{ onNueva }}" style="flex:none;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.75);border:1px solid rgba(15,23,42,.09);color:#0f172a;font-size:26px;font-weight:400;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,23,42,.04)">+</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:6px 22px 14px;display:flex;align-items:center;gap:14px">
+<button onClick="{{ onBack }}" style="flex:none;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.75);border:1px solid rgba(15,23,42,.09);color:#0f172a;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+<div>
+<div style="font-size:24px;font-weight:800;letter-spacing:-.6px;color:#0f172a;line-height:1.15">{{ headTitle }}</div>
+<div style="font-size:13px;color:#8b90a5">{{ headSub }}</div>
+</div>
+</div>
+</sc-if>
+
+<div style="flex:1;overflow-y:auto;padding:4px 20px 130px;border-top:1px solid rgba(15,23,42,.05)">
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div style="padding-top:16px">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.2px;color:#9aa0b4;margin-bottom:10px">METAS ACTIVAS</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<sc-for list="{{ metasCards }}" as="m" hint-placeholder-count="2">
+<div onClick="{{ m.onOpen }}" style="cursor:pointer;background:#fff;border-radius:24px;padding:16px 14px 15px;box-shadow:0 2px 10px rgba(30,27,75,.06);border:1px solid rgba(15,23,42,.03);display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div style="width:38px;height:38px;border-radius:13px;background:#f1f1f8;display:flex;align-items:center;justify-content:center;font-size:20px">{{ m.emoji }}</div>
+<sc-if value="{{ m.completa }}" hint-placeholder-val="{{ false }}"><span style="font-size:15px;font-weight:800;color:#16a34a">{{ m.pctLabel }}</span></sc-if>
+<sc-if value="{{ m.enCurso }}" hint-placeholder-val="{{ true }}"><span style="font-size:15px;font-weight:800;color:#5b4de8">{{ m.pctLabel }}</span></sc-if>
+</div>
+<div style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.25;letter-spacing:-.2px;min-height:35px;text-wrap:pretty">{{ m.nombre }}</div>
+<div>
+<div style="height:11px;border-radius:99px;background:#eceaf4;overflow:hidden">
+<sc-if value="{{ m.completa }}" hint-placeholder-val="{{ false }}"><div style="height:100%;border-radius:99px;width:100%;background:linear-gradient(90deg,#15803d,#22c55e)"></div></sc-if>
+<sc-if value="{{ m.enCurso }}" hint-placeholder-val="{{ true }}"><div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#5b4de8,#8b5cf6);width: {{ m.barW }}"></div></sc-if>
+</div>
+<div style="margin-top:8px;font-size:12px;color:#8b90a5;font-weight:500"><span style="color:#0f172a;font-weight:700">{{ m.invLabel }}</span> / {{ m.totalLabel }}</div>
+</div>
+</div>
+</sc-for>
+<div onClick="{{ onNueva }}" style="cursor:pointer;border-radius:24px;border:2px dashed rgba(91,77,232,.30);background:rgba(255,255,255,.35);min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#6d63d6">
+<div style="font-size:26px;font-weight:300;line-height:1">+</div>
+<div style="font-size:13px;font-weight:600">Nueva meta</div>
+</div>
+</div>
+<div style="margin-top:18px;font-size:12px;line-height:1.5;color:#9aa0b4;text-wrap:pretty">Lo invertido se calcula solo: es la suma de los ítems que marcas como comprados.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isVacio }}" hint-placeholder-val="{{ false }}">
+<div style="padding:70px 10px 0;display:flex;flex-direction:column;align-items:center;text-align:center">
+<div style="width:96px;height:96px;border-radius:50%;background:#fff;box-shadow:0 2px 14px rgba(30,27,75,.07);display:flex;align-items:center;justify-content:center;margin-bottom:22px">
+<div style="width:52px;height:52px;border-radius:50%;border:5px solid rgba(91,77,232,.22);display:flex;align-items:center;justify-content:center">
+<div style="width:18px;height:18px;border-radius:50%;background:#5b4de8"></div>
+</div>
+</div>
+<div style="font-size:21px;font-weight:800;color:#0f172a;letter-spacing:-.4px">Aún no tienes metas</div>
+<div style="font-size:14px;color:#8b90a5;margin-top:8px;max-width:270px;line-height:1.5;text-wrap:pretty">Arma una lista de lo que quieres comprar y ve avanzando conforme lo consigues.</div>
+<button onClick="{{ onNueva }}" style="margin-top:26px;width:100%;padding:17px;border:none;border-radius:20px;background:linear-gradient(135deg,#5b4de8,#7c5cf0);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(91,77,232,.30)">Crear mi primera meta</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+<div style="padding-top:16px">
+<div style="border-radius:26px;padding:20px 22px 18px;background:linear-gradient(135deg,#6a5bf0 0%,#8b5cf6 100%);box-shadow:0 10px 24px rgba(91,77,232,.28)">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<span style="font-size:14px;font-weight:600;color:rgba(255,255,255,.92)">Cumplido</span>
+<span style="font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.22);padding:5px 11px;border-radius:99px">{{ d.metaFecha }}</span>
+</div>
+<div style="font-size:44px;font-weight:800;color:#fff;letter-spacing:-1.5px;line-height:1.15;margin-top:4px">{{ d.pctLabel }}</div>
+<div style="height:11px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden;margin-top:10px">
+<div style="height:100%;border-radius:99px;background:#fff;width: {{ d.barW }}"></div>
+</div>
+<div style="height:1px;background:rgba(255,255,255,.28);margin:16px 0 12px"></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;color:#fff">
+<span style="font-size:16px;font-weight:700">{{ d.invLabel }} <span style="font-weight:500;color:rgba(255,255,255,.75)">/ {{ d.totalLabel }}</span></span>
+<span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.92)">Falta {{ d.faltaLabel }}</span>
+</div>
+</div>
+
+<div style="display:flex;gap:10px;margin-top:14px">
+<button onClick="{{ onEditar }}" style="flex:1;padding:13px;border-radius:17px;background:rgba(255,255,255,.8);border:1px solid rgba(15,23,42,.08);font-size:14px;font-weight:600;color:#0f172a;cursor:pointer">Editar meta</button>
+<button onClick="{{ onNuevoItem }}" style="flex:1;padding:13px;border-radius:17px;background:rgba(91,77,232,.10);border:1px solid rgba(91,77,232,.22);font-size:14px;font-weight:600;color:#5b4de8;cursor:pointer">+ Agregar</button>
+</div>
+
+<sc-if value="{{ d.hayPendientes }}" hint-placeholder-val="{{ true }}">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.2px;color:#9aa0b4;margin:24px 0 10px">PENDIENTES · {{ d.nPendientes }}</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ d.pendientes }}" as="it" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:13px;background:#fefce8;border:1px solid #fde68a;border-radius:20px;padding:14px 16px">
+<button onClick="{{ it.onTap }}" style="flex:none;width:28px;height:28px;border-radius:50%;border:2px solid #f0b429;background:rgba(255,255,255,.7);cursor:pointer"></button>
+<div style="flex:1;min-width:0">
+<div style="font-size:15px;font-weight:600;color:#0f172a;letter-spacing:-.2px;text-wrap:pretty">{{ it.nombre }}</div>
+<div style="font-size:12px;color:#a16207;font-weight:600;margin-top:2px">Prioridad {{ it.prioridad }}</div>
+</div>
+<div style="flex:none;font-size:15px;font-weight:700;color:#0f172a">{{ it.precioLabel }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ d.hayComprados }}" hint-placeholder-val="{{ true }}">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.2px;color:#9aa0b4;margin:24px 0 10px">COMPRADOS · {{ d.nComprados }}</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ d.comprados }}" as="it" hint-placeholder-count="1">
+<div style="display:flex;align-items:center;gap:13px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:20px;padding:14px 16px">
+<button onClick="{{ it.onTap }}" style="flex:none;width:28px;height:28px;border-radius:50%;border:none;background:#16a34a;color:#fff;font-size:15px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">✓</button>
+<div style="flex:1;min-width:0">
+<div style="font-size:15px;font-weight:600;color:#6b7280;letter-spacing:-.2px;text-decoration:line-through;text-wrap:pretty">{{ it.nombre }}</div>
+<div style="font-size:12px;color:#15803d;font-weight:600;margin-top:2px">{{ it.fechaLabel }}</div>
+</div>
+<div style="flex:none;font-size:15px;font-weight:700;color:#15803d">{{ it.precioLabel }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<button onClick="{{ onNuevoItem }}" style="width:100%;margin-top:14px;padding:16px;border-radius:20px;border:2px dashed rgba(91,77,232,.30);background:rgba(255,255,255,.35);color:#6d63d6;font-size:14px;font-weight:600;cursor:pointer">+ Agregar herramienta</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+<div style="padding-top:16px">
+<div style="background:#fff;border-radius:24px;padding:20px 18px;box-shadow:0 2px 10px rgba(30,27,75,.06);display:flex;flex-direction:column;gap:16px">
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Nombre de la meta</div>
+<input value="{{ fNombre }}" onChange="{{ onFNombre }}" placeholder="Ej. Taller mecánico" style="width:100%;padding:15px 16px;border-radius:17px;border:none;background:#eff0f5;font-size:16px;font-weight:500;color:#0f172a" />
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Ícono</div>
+<div style="display:flex;flex-wrap:wrap;gap:9px">
+<sc-for list="{{ emojis }}" as="e" hint-placeholder-count="6">
+<sc-if value="{{ e.sel }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ e.onTap }}" style="width:48px;height:48px;border-radius:16px;font-size:22px;cursor:pointer;background:rgba(91,77,232,.12);border:2px solid #5b4de8">{{ e.char }}</button>
+</sc-if>
+<sc-if value="{{ e.noSel }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ e.onTap }}" style="width:48px;height:48px;border-radius:16px;font-size:22px;cursor:pointer;background:#eff0f5;border:2px solid transparent">{{ e.char }}</button>
+</sc-if>
+</sc-for>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Fecha objetivo <span style="font-weight:500;color:#b3b8c9">(opcional)</span></div>
+<input type="date" value="{{ fFecha }}" onChange="{{ onFFecha }}" style="width:100%;min-width:0;padding:15px 13px;border-radius:17px;border:none;background:#eff0f5;font-size:15px;line-height:20px;font-weight:600;color:#0f172a" />
+</div>
+<sc-if value="{{ hayHint }}" hint-placeholder-val="{{ false }}">
+<div style="background:rgba(91,77,232,.08);border-radius:17px;padding:14px 16px">
+<div style="font-size:14px;font-weight:700;color:#5b4de8">{{ hintMonto }}</div>
+<div style="font-size:12px;color:#8b90a5;margin-top:4px;line-height:1.45;text-wrap:pretty">{{ hintNota }}</div>
+</div>
+</sc-if>
+</div>
+<button onClick="{{ onGuardarMeta }}" style="width:100%;margin-top:18px;padding:18px;border:none;border-radius:20px;background:linear-gradient(135deg,#5b4de8,#7c5cf0);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(91,77,232,.30)">Guardar meta</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isItemForm }}" hint-placeholder-val="{{ false }}">
+<div style="padding-top:16px">
+<div style="background:#fff;border-radius:24px;padding:20px 18px;box-shadow:0 2px 10px rgba(30,27,75,.06);display:flex;flex-direction:column;gap:16px">
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Nombre del ítem</div>
+<input value="{{ iNombre }}" onChange="{{ onINombre }}" placeholder="Ej. Escáner OBD2" style="width:100%;padding:15px 16px;border-radius:17px;border:none;background:#eff0f5;font-size:16px;font-weight:500;color:#0f172a" />
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Precio estimado</div>
+<div style="display:flex;align-items:center;gap:8px;background:#eff0f5;border-radius:17px;padding:13px 16px">
+<span style="font-size:22px;font-weight:700;color:#9aa0b4">$</span>
+<input value="{{ iPrecio }}" onChange="{{ onIPrecio }}" placeholder="0.00" style="flex:1;min-width:0;border:none;background:transparent;font-size:26px;font-weight:700;color:#0f172a;letter-spacing:-.5px" />
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Prioridad</div>
+<div style="display:flex;gap:9px">
+<sc-for list="{{ prios }}" as="p" hint-placeholder-count="3">
+<sc-if value="{{ p.sel }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ p.onTap }}" style="flex:1;padding:13px 0;border-radius:15px;font-size:14px;font-weight:700;cursor:pointer;background:#5b4de8;color:#fff;border:none">{{ p.label }}</button>
+</sc-if>
+<sc-if value="{{ p.noSel }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ p.onTap }}" style="flex:1;padding:13px 0;border-radius:15px;font-size:14px;font-weight:600;cursor:pointer;background:#eff0f5;color:#6b7280;border:none">{{ p.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Nota <span style="font-weight:500;color:#b3b8c9">(opcional)</span></div>
+<input value="{{ iNota }}" onChange="{{ onINota }}" placeholder="Ej. Buscar en oferta de temporada" style="width:100%;padding:15px 16px;border-radius:17px;border:none;background:#eff0f5;font-size:15px;font-weight:500;color:#0f172a" />
+</div>
+</div>
+<button onClick="{{ onGuardarItem }}" style="width:100%;margin-top:18px;padding:18px;border:none;border-radius:20px;background:linear-gradient(135deg,#5b4de8,#7c5cf0);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(91,77,232,.30)">Guardar ítem</button>
+<div style="margin-top:14px;font-size:12px;line-height:1.5;color:#9aa0b4;text-align:center;text-wrap:pretty">El precio estimado suma al total de la meta. Lo invertido solo cambia cuando marcas el ítem como comprado.</div>
+</div>
+</sc-if>
+
+</div>
+
+<div style="position:absolute;left:14px;right:14px;bottom:14px;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);border-radius:28px;padding:7px 8px;display:flex;gap:2px;box-shadow:0 8px 26px rgba(30,27,75,.14);border:1px solid rgba(255,255,255,.8)">
+<button onClick="{{ onOtherTab }}" style="flex:1;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border-radius:20px;color:#6b7280">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"></path></svg>
+<span style="font-size:10px;font-weight:600">Inicio</span>
+</button>
+<button onClick="{{ onOtherTab }}" style="flex:1;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border-radius:20px;color:#6b7280">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+<span style="font-size:10px;font-weight:600">Nuevo</span>
+</button>
+<button onClick="{{ onOtherTab }}" style="flex:1;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border-radius:20px;color:#6b7280">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 15v5M12 9v11M18 4v16"></path></svg>
+<span style="font-size:10px;font-weight:600">Presup.</span>
+</button>
+<button onClick="{{ onOtherTab }}" style="flex:1;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border-radius:20px;color:#6b7280">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2.5"></rect><path d="M3 11h18"></path></svg>
+<span style="font-size:10px;font-weight:600">Cuentas</span>
+</button>
+<button onClick="{{ onMetasTab }}" style="flex:1;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border-radius:20px;background:linear-gradient(135deg,#5b4de8,#7c5cf0);color:#fff;box-shadow:0 4px 12px rgba(91,77,232,.32)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3.4"></circle></svg>
+<span style="font-size:10px;font-weight:700">Metas</span>
+</button>
+</div>
+
+<sc-if value="{{ hayToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:18px;right:18px;bottom:104px;background:#1e1b4b;border-radius:20px;padding:14px 18px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 12px 30px rgba(30,27,75,.35);animation:fadeIn .18s ease">
+<span style="font-size:16px;line-height:1.3">💡</span>
+<div style="flex:1;font-size:13px;line-height:1.45;color:#fff;font-weight:500;text-wrap:pretty">{{ toast }}</div>
+<button onClick="{{ onCerrarToast }}" style="border:none;background:transparent;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;line-height:1;padding:0">×</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ haySheet }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ onCerrarSheet }}" style="position:absolute;inset:0;background:rgba(15,23,42,.42);animation:fadeIn .2s ease"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:30px 30px 44px 44px;padding:12px 20px 26px;animation:sheetUp .26s cubic-bezier(.22,1,.36,1);box-shadow:0 -10px 40px rgba(30,27,75,.20);max-height:92%;overflow-y:auto">
+<div style="width:40px;height:4px;border-radius:99px;background:#e2e3ec;margin:0 auto 16px"></div>
+<div style="font-size:21px;font-weight:800;color:#0f172a;letter-spacing:-.5px">Marcar como comprado</div>
+<div style="font-size:14px;color:#8b90a5;margin-top:3px">{{ sh.nombre }}</div>
+
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:15px">
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Precio real pagado</div>
+<div style="display:flex;align-items:center;gap:8px;background:#eff0f5;border-radius:17px;padding:13px 16px">
+<span style="font-size:22px;font-weight:700;color:#9aa0b4">$</span>
+<input value="{{ sPrecio }}" onChange="{{ onSPrecio }}" style="flex:1;min-width:0;border:none;background:transparent;font-size:26px;font-weight:700;color:#0f172a;letter-spacing:-.5px" />
+</div>
+<div style="font-size:12px;color:#9aa0b4;margin-top:6px">Estimado: {{ sh.estimadoLabel }}</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Fecha de compra</div>
+<input type="date" value="{{ sFecha }}" onChange="{{ onSFecha }}" style="width:100%;min-width:0;padding:15px 13px;border-radius:17px;border:none;background:#eff0f5;font-size:15px;line-height:20px;font-weight:600;color:#0f172a" />
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;color:#8b90a5;margin-bottom:7px">Cuenta origen</div>
+<div style="display:flex;gap:9px">
+<sc-for list="{{ cuentas }}" as="c" hint-placeholder-count="3">
+<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ c.onTap }}" style="flex:1;padding:13px 4px;border-radius:15px;font-size:13px;font-weight:700;cursor:pointer;background:#5b4de8;color:#fff;border:none">{{ c.label }}</button>
+</sc-if>
+<sc-if value="{{ c.noSel }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ c.onTap }}" style="flex:1;padding:13px 4px;border-radius:15px;font-size:13px;font-weight:600;cursor:pointer;background:#eff0f5;color:#6b7280;border:none">{{ c.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px;background:#f7f7fb;border-radius:19px;padding:15px 16px">
+<div style="flex:1">
+<div style="font-size:15px;font-weight:700;color:#0f172a">Registrar también como gasto</div>
+<div style="font-size:12px;color:#8b90a5;margin-top:2px;line-height:1.4;text-wrap:pretty">Crea el movimiento en tus cuentas y presupuesto.</div>
+</div>
+<sc-if value="{{ sGasto }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ onToggleGasto }}" style="flex:none;width:54px;height:32px;border-radius:99px;border:none;cursor:pointer;background:#5b4de8;display:flex;align-items:center;justify-content:flex-end;padding:3px"><div style="width:26px;height:26px;border-radius:50%;background:#fff"></div></button>
+</sc-if>
+<sc-if value="{{ sGastoOff }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ onToggleGasto }}" style="flex:none;width:54px;height:32px;border-radius:99px;border:none;cursor:pointer;background:#dcdde6;display:flex;align-items:center;justify-content:flex-start;padding:3px"><div style="width:26px;height:26px;border-radius:50%;background:#fff"></div></button>
+</sc-if>
+</div>
+</div>
+
+<button onClick="{{ onConfirmar }}" style="width:100%;margin-top:18px;padding:18px;border:none;border-radius:20px;background:linear-gradient(135deg,#5b4de8,#7c5cf0);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(91,77,232,.30)">Confirmar compra</button>
+<div style="margin-top:12px;font-size:12px;line-height:1.5;color:#9aa0b4;text-align:center;text-wrap:pretty">Si el precio real cambia, el total de la meta se ajusta solo.</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:920},&quot;estadoVacio&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;metasMax&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:1,&quot;max&quot;:5,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Reglas&quot;},&quot;registrarGasto&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reglas&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'list', metaId: 'taller', sheetItem: null, toast: '', formMode: 'nueva',
+    fNombre: '', fEmoji: '🔧', fFecha: '',
+    iNombre: '', iPrecio: '', iPrio: 'Media', iNota: '',
+    sPrecio: '', sFecha: '2026-09-20', sCuenta: 'BBVA', sGasto: true,
+    metas: [
+      { id: 'taller', emoji: '🔧', nombre: 'Taller mecánico', fecha: '2027-06-30', items: [
+        { id: 't1', nombre: 'Lámpara de trabajo', precio: 980, comprado: true, fecha: '12 sep 2026', prioridad: 'Media' },
+        { id: 't2', nombre: 'Escáner OBD2', precio: 3200, comprado: false, prioridad: 'Alta' },
+        { id: 't3', nombre: 'Juego de llaves combinadas', precio: 1800, comprado: false, prioridad: 'Alta' },
+        { id: 't4', nombre: 'Gato hidráulico de patín', precio: 2400, comprado: false, prioridad: 'Media' },
+        { id: 't5', nombre: 'Torquímetro', precio: 1520, comprado: false, prioridad: 'Media' },
+        { id: 't6', nombre: 'Caja de herramientas', precio: 1600, comprado: false, prioridad: 'Baja' }
+      ] },
+      { id: 'tienda', emoji: '📦', nombre: 'Tienda de productos físicos', fecha: '', items: [
+        { id: 'd1', nombre: 'Etiquetadora térmica', precio: 1350, comprado: true, fecha: '2 sep 2026', prioridad: 'Alta' },
+        { id: 'd2', nombre: 'Lote inicial de inventario', precio: 2600, comprado: false, prioridad: 'Alta' },
+        { id: 'd3', nombre: 'Empaques y cajas', precio: 800, comprado: false, prioridad: 'Media' },
+        { id: 'd4', nombre: 'Balanza digital', precio: 650, comprado: false, prioridad: 'Baja' },
+        { id: 'd5', nombre: 'Tienda en línea (dominio y plan)', precio: 600, comprado: false, prioridad: 'Media' }
+      ] }
+    ]
+  };
+
+  fmt(n, d) {
+    const dec = d === undefined ? 2 : d;
+    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  tot(m) { return m.items.reduce((s, i) => s + i.precio, 0); }
+  inv(m) { return m.items.filter(i => i.comprado).reduce((s, i) => s + i.precio, 0); }
+  pct(m) { const t = this.tot(m); return t ? Math.round(this.inv(m) / t * 100) : 0; }
+  meta() { return this.state.metas.find(m => m.id === this.state.metaId) || this.state.metas[0]; }
+  toast(t) { this.setState({ toast: t }); }
+  fechaCorta(iso) {
+    if (!iso) return '';
+    const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const p = iso.split('-');
+    return Number(p[2]) + ' ' + mes[Number(p[1]) - 1] + ' ' + p[0];
+  }
+
+  renderVals() {
+    const s = this.state;
+    const max = this.props.metasMax ?? 3;
+    const vacio = (this.props.estadoVacio ?? false) || s.metas.length === 0;
+    const screen = vacio && s.screen === 'list' ? 'vacio' : s.screen;
+    const m = this.meta();
+    const tot = this.tot(m), inv = this.inv(m), pct = this.pct(m);
+    const totalActivas = s.metas.reduce((a, x) => a + this.tot(x), 0);
+    const invActivas = s.metas.reduce((a, x) => a + this.inv(x), 0);
+
+    const open = id => () => this.setState({ screen: 'detail', metaId: id });
+    const tap = it => () => {
+      if (it.comprado) {
+        this.setState({ metas: s.metas.map(x => x.id !== m.id ? x : Object.assign({}, x, { items: x.items.map(i => i.id === it.id ? Object.assign({}, i, { comprado: false }) : i) })) });
+      } else {
+        this.setState({ sheetItem: it.id, sPrecio: String(it.precio.toFixed(2)), sFecha: '2026-09-20', sGasto: this.props.registrarGasto ?? true });
+      }
+    };
+
+    const sheetIt = m.items.find(i => i.id === s.sheetItem);
+    const mesesRestantes = () => {
+      if (!s.fFecha) return 0;
+      const hoy = new Date(2026, 8, 20), f = new Date(s.fFecha + 'T00:00:00');
+      return Math.max(1, Math.round((f - hoy) / 2629800000));
+    };
+    const editando = s.formMode === 'editar';
+    const faltaForm = editando ? Math.max(0, tot - inv) : 0;
+    const meses = mesesRestantes();
+
+    return {
+      isList: screen === 'list', isVacio: screen === 'vacio', isDetail: screen === 'detail',
+      isForm: screen === 'form', isItemForm: screen === 'itemForm',
+      hasBack: screen === 'detail' || screen === 'form' || screen === 'itemForm',
+      headTitle: screen === 'detail' ? m.emoji + '  ' + m.nombre : screen === 'form' ? (editando ? 'Editar meta' : 'Nueva meta') : 'Agregar ítem',
+      headSub: screen === 'detail' ? m.items.length + ' ítems · ' + m.items.filter(i => i.comprado).length + ' comprados'
+        : screen === 'form' ? 'El total se arma con los ítems' : m.nombre,
+      listSub: s.metas.length + (s.metas.length === 1 ? ' activa · ' : ' activas · ') + this.fmt(invActivas, 0) + ' de ' + this.fmt(totalActivas, 0),
+
+      metasCards: s.metas.map(x => {
+        const p = this.pct(x);
+        return { id: x.id, emoji: x.emoji, nombre: x.nombre, pctLabel: p + '%', completa: p >= 100, enCurso: p < 100,
+          barW: Math.max(3, p) + '%', invLabel: this.fmt(this.inv(x), 0), totalLabel: this.fmt(this.tot(x), 0), onOpen: open(x.id) };
+      }),
+
+      d: {
+        pctLabel: pct + '%', barW: Math.max(2, pct) + '%',
+        invLabel: this.fmt(inv), totalLabel: this.fmt(tot), faltaLabel: this.fmt(Math.max(0, tot - inv)),
+        metaFecha: m.fecha ? 'Meta: ' + this.fechaCorta(m.fecha) : 'Sin fecha',
+        nPendientes: m.items.filter(i => !i.comprado).length,
+        nComprados: m.items.filter(i => i.comprado).length,
+        hayPendientes: m.items.some(i => !i.comprado),
+        hayComprados: m.items.some(i => i.comprado),
+        pendientes: m.items.filter(i => !i.comprado).map(i => ({ nombre: i.nombre, precioLabel: this.fmt(i.precio), prioridad: i.prioridad, onTap: tap(i) })),
+        comprados: m.items.filter(i => i.comprado).map(i => ({ nombre: i.nombre, precioLabel: this.fmt(i.precio), fechaLabel: 'Comprado el ' + (i.fecha || 'hoy'), onTap: tap(i) }))
+      },
+
+      fNombre: s.fNombre, fFecha: s.fFecha,
+      emojis: ['🔧', '📦', '🚗', '💻', '🏠', '🎓', '📷', '🛠️'].map(c => ({ char: c, sel: s.fEmoji === c, noSel: s.fEmoji !== c, onTap: () => this.setState({ fEmoji: c }) })),
+      hayHint: !!s.fFecha,
+      hintMonto: 'Te toca apartar ≈ ' + this.fmt(editando ? faltaForm / meses : 0) + ' al mes',
+      hintNota: editando ? 'Faltan ' + meses + ' meses para tu fecha objetivo y ' + this.fmt(faltaForm) + ' por invertir.'
+        : 'Se recalcula en cuanto agregues ítems a la meta.',
+      onFNombre: e => this.setState({ fNombre: e.target.value }),
+      onFFecha: e => this.setState({ fFecha: e.target.value }),
+      onGuardarMeta: () => {
+        if (editando) {
+          this.setState({ screen: 'detail', metas: s.metas.map(x => x.id !== m.id ? x : Object.assign({}, x, { nombre: s.fNombre || x.nombre, emoji: s.fEmoji, fecha: s.fFecha })), toast: 'Meta actualizada.' });
+        } else {
+          const id = 'm' + Date.now();
+          this.setState({ screen: 'detail', metaId: id, metas: s.metas.concat([{ id: id, emoji: s.fEmoji, nombre: s.fNombre || 'Meta nueva', fecha: s.fFecha, items: [] }]), toast: 'Meta creada. Agrega los ítems que quieres comprar.' });
+        }
+      },
+
+      iNombre: s.iNombre, iPrecio: s.iPrecio, iNota: s.iNota,
+      prios: ['Alta', 'Media', 'Baja'].map(p => ({ label: p, sel: s.iPrio === p, noSel: s.iPrio !== p, onTap: () => this.setState({ iPrio: p }) })),
+      onINombre: e => this.setState({ iNombre: e.target.value }),
+      onIPrecio: e => this.setState({ iPrecio: e.target.value.replace(/[^0-9.]/g, '') }),
+      onINota: e => this.setState({ iNota: e.target.value }),
+      onGuardarItem: () => {
+        const p = parseFloat(s.iPrecio);
+        if (!s.iNombre || !p) { this.toast('Ponle nombre y precio estimado al ítem para poder guardarlo.'); return; }
+        this.setState({ screen: 'detail', metas: s.metas.map(x => x.id !== m.id ? x : Object.assign({}, x, { items: x.items.concat([{ id: 'i' + Date.now(), nombre: s.iNombre, precio: p, comprado: false, prioridad: s.iPrio, nota: s.iNota }]) })) });
+      },
+
+      haySheet: !!sheetIt,
+      sh: { nombre: sheetIt ? sheetIt.nombre : '', estimadoLabel: sheetIt ? this.fmt(sheetIt.precio) : '' },
+      sPrecio: s.sPrecio, sFecha: s.sFecha, sGasto: s.sGasto, sGastoOff: !s.sGasto,
+      cuentas: [{ id: 'BBVA', label: 'BBVA Débito' }, { id: 'Efectivo', label: 'Efectivo' }, { id: 'Nu', label: 'Nu Crédito' }]
+        .map(c => ({ label: c.label, sel: s.sCuenta === c.id, noSel: s.sCuenta !== c.id, onTap: () => this.setState({ sCuenta: c.id }) })),
+      onSPrecio: e => this.setState({ sPrecio: e.target.value.replace(/[^0-9.]/g, '') }),
+      onSFecha: e => this.setState({ sFecha: e.target.value }),
+      onToggleGasto: () => this.setState({ sGasto: !s.sGasto }),
+      onCerrarSheet: () => this.setState({ sheetItem: null }),
+      onConfirmar: () => {
+        const p = parseFloat(s.sPrecio) || (sheetIt ? sheetIt.precio : 0);
+        this.setState({
+          sheetItem: null,
+          toast: 'Listo: ' + (sheetIt ? sheetIt.nombre : '') + ' por ' + this.fmt(p) + (s.sGasto ? ' · registrado como gasto.' : '.'),
+          metas: s.metas.map(x => x.id !== m.id ? x : Object.assign({}, x, { items: x.items.map(i => i.id !== s.sheetItem ? i : Object.assign({}, i, { comprado: true, precio: p, fecha: this.fechaCorta(s.sFecha) })) }))
+        });
+      },
+
+      onNueva: () => {
+        if (s.metas.length >= max) { this.toast('Por ahora puedes tener ' + max + ' metas activas. Termina o archiva una para abrir otra.'); return; }
+        this.setState({ screen: 'form', formMode: 'nueva', fNombre: '', fEmoji: '🔧', fFecha: '' });
+      },
+      onEditar: () => this.setState({ screen: 'form', formMode: 'editar', fNombre: m.nombre, fEmoji: m.emoji, fFecha: m.fecha }),
+      onNuevoItem: () => this.setState({ screen: 'itemForm', iNombre: '', iPrecio: '', iPrio: 'Media', iNota: '' }),
+      onBack: () => this.setState({ screen: screen === 'detail' ? 'list' : 'detail' }),
+      onMetasTab: () => this.setState({ screen: 'list', toast: '' }),
+      onOtherTab: () => this.toast('Esta demo solo trae la sección Metas navegable.'),
+      hayToast: !!s.toast, toast: s.toast, onCerrarToast: () => this.setState({ toast: '' })
+    };
+  }
+}
+</script>
+</body>
+</html>
