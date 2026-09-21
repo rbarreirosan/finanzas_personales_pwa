@@ -102,7 +102,7 @@ function emptyHtml() {
       </div>
       <div class="me-title">Aún no tienes metas</div>
       <div class="me-sub">Arma una lista de lo que quieres comprar y ve avanzando conforme lo consigues.</div>
-      <a class="btn btn-block meta-btn" href="#/meta-form" style="margin-top:24px;text-decoration:none;text-align:center">
+      <a class="btn btn-block meta-btn" href="#/meta-form" style="margin-top:24px;text-decoration:none;display:flex;align-items:center;justify-content:center">
         Crear mi primera meta
       </a>
     </div>
