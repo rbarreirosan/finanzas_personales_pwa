@@ -369,3 +369,131 @@ export async function guardarConfiguracion(cfg) {
   if (error) throw error;
   return data;
 }
+
+// ============================================================================
+// Metas de compra/ahorro (tablas metas y meta_items).
+// "Invertido" y "%" se calculan en el cliente (ver lib/metasCalc.js).
+// ============================================================================
+export const MAX_METAS_ACTIVAS = 3;
+
+// ---------- Metas ----------
+export function listMetas() {
+  return cachedRead('metas', async () => {
+    const { data, error } = await supabase
+      .from('metas')
+      .select('id, nombre, emoji, fecha_objetivo, activa, created_at')
+      .order('created_at');
+    if (error) throw error;
+    return data ?? [];
+  });
+}
+
+export async function crearMeta(meta) {
+  const nombre = (meta.nombre || '').trim();
+  if (!nombre) throw new Error('Ponle un nombre a la meta.');
+  const user_id = await requireUserId();
+  const payload = {
+    user_id,
+    nombre,
+    emoji: (meta.emoji || '').trim() || '🎯',
+    fecha_objetivo: meta.fecha_objetivo || null,
+    activa: meta.activa !== false,
+  };
+  const { data, error } = await supabase
+    .from('metas')
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function actualizarMeta(id, patch) {
+  const payload = {};
+  if (patch.nombre != null) payload.nombre = String(patch.nombre).trim();
+  if (patch.emoji != null) payload.emoji = String(patch.emoji).trim() || '🎯';
+  if ('fecha_objetivo' in patch) payload.fecha_objetivo = patch.fecha_objetivo || null;
+  if ('activa' in patch) payload.activa = !!patch.activa;
+  const { data, error } = await supabase
+    .from('metas')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarMeta(id) {
+  // on delete cascade borra también sus meta_items.
+  const { error } = await supabase.from('metas').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Ítems de meta ----------
+export function listMetaItems() {
+  return cachedRead('meta_items', async () => {
+    const { data, error } = await supabase
+      .from('meta_items')
+      .select(
+        'id, meta_id, nombre, precio_estimado, precio_real, prioridad, nota, comprado, fecha_compra, gasto_id, created_at'
+      )
+      .order('created_at');
+    if (error) throw error;
+    return data ?? [];
+  });
+}
+
+export async function crearMetaItem(item) {
+  if (!item.meta_id) throw new Error('Falta la meta del ítem.');
+  const nombre = (item.nombre || '').trim();
+  if (!nombre) throw new Error('Ponle un nombre al ítem.');
+  const precio = Number(item.precio_estimado);
+  if (!Number.isFinite(precio) || precio < 0) {
+    throw new Error('El precio estimado no puede ser negativo.');
+  }
+  const user_id = await requireUserId();
+  const payload = {
+    user_id,
+    meta_id: item.meta_id,
+    nombre,
+    precio_estimado: precio,
+    prioridad: ['alta', 'media', 'baja'].includes(item.prioridad)
+      ? item.prioridad
+      : 'media',
+    nota: (item.nota || '').trim() || null,
+  };
+  const { data, error } = await supabase
+    .from('meta_items')
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function actualizarMetaItem(id, patch) {
+  const payload = {};
+  if (patch.nombre != null) payload.nombre = String(patch.nombre).trim();
+  if ('precio_estimado' in patch) payload.precio_estimado = Number(patch.precio_estimado) || 0;
+  if ('precio_real' in patch)
+    payload.precio_real = patch.precio_real == null ? null : Number(patch.precio_real);
+  if (patch.prioridad != null) payload.prioridad = patch.prioridad;
+  if ('nota' in patch) payload.nota = (patch.nota || '').trim() || null;
+  if ('comprado' in patch) payload.comprado = !!patch.comprado;
+  if ('fecha_compra' in patch) payload.fecha_compra = patch.fecha_compra || null;
+  if ('gasto_id' in patch) payload.gasto_id = patch.gasto_id || null;
+  const { data, error } = await supabase
+    .from('meta_items')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarMetaItem(id) {
+  const { error } = await supabase.from('meta_items').delete().eq('id', id);
+  if (error) throw error;
+}

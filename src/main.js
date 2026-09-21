@@ -17,6 +17,9 @@ import { MetaView } from './views/meta.js';
 import { PresupuestoFormView } from './views/presupuestoForm.js';
 import { MovimientosView } from './views/movimientos.js';
 import { ObjetivoView } from './views/objetivo.js';
+import { MetasView } from './views/metas.js';
+import { MetaDetalleView } from './views/metaDetalle.js';
+import { MetaFormView } from './views/metaForm.js';
 
 const app = document.getElementById('app');
 
@@ -25,6 +28,7 @@ const ICONS = {
   plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   bars: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>',
   card: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></svg>',
+  target: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>',
 };
 
 const routes = {
@@ -38,6 +42,9 @@ const routes = {
   '#/presupuesto': { view: PresupuestoFormView },
   '#/movimientos': { view: MovimientosView },
   '#/objetivo': { view: ObjetivoView },
+  '#/metas': { view: MetasView, tab: true },
+  '#/meta-detalle': { view: MetaDetalleView },
+  '#/meta-form': { view: MetaFormView },
 };
 
 // Separa la ruta ("#/x") de sus parámetros ("?a=b") en el hash.
@@ -79,6 +86,7 @@ function tabbar(hash) {
       ${tab('#/nuevo', ICONS.plus, 'Nuevo')}
       ${tab('#/presupuestos', ICONS.bars, 'Presup.')}
       ${tab('#/cuentas', ICONS.card, 'Cuentas')}
+      ${tab('#/metas', ICONS.target, 'Metas')}
     </nav>
   `;
 }
