@@ -1730,3 +1730,25 @@ body.modal-open {
   font-weight: 600;
   text-decoration: underline;
 }
+
+/* Código de color por prioridad: Alta=rojo, Media=amarillo, Baja=azul */
+.mi-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.prio-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.prio-alta { color: #dc2626; }
+.prio-media { color: #b45309; }
+.prio-baja { color: #2563eb; }
+.prio-alta .prio-dot { background: #dc2626; }
+.prio-media .prio-dot { background: #f59e0b; }
+.prio-baja .prio-dot { background: #2563eb; }
+.mi-check.prio-alta { border-color: #dc2626; }
+.mi-check.prio-media { border-color: #f0b429; }
+.mi-check.prio-baja { border-color: #2563eb; }

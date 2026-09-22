@@ -130,19 +130,22 @@ async function init(el, id) {
       primerEnlace(it.nota) ? '<span class="mi-link" aria-label="Tiene enlace">🔗</span>' : '';
 
     const pendHtml = pend
-      .map(
-        (it) => `
+      .map((it) => {
+        const prio = it.prioridad || 'media';
+        return `
         <div class="meta-item pend">
-          <button class="mi-check" data-buy="${it.id}" aria-label="Marcar como comprado"></button>
+          <button class="mi-check prio-${prio}" data-buy="${it.id}" aria-label="Marcar como comprado"></button>
           <button class="mi-open" data-open="${it.id}">
             <div class="mi-body">
               <div class="mi-name">${escapeHtml(it.nombre)} ${linkBadge(it)}</div>
-              <div class="mi-meta pend">Prioridad ${PRIO_LABEL[it.prioridad] || 'Media'}</div>
+              <div class="mi-meta prio-${prio}"><span class="prio-dot"></span>Prioridad ${
+          PRIO_LABEL[prio] || 'Media'
+        }</div>
             </div>
             <div class="mi-price">${money(montoItem(it))}</div>
           </button>
-        </div>`
-      )
+        </div>`;
+      })
       .join('');
 
     const compHtml = comp
@@ -242,9 +245,9 @@ async function init(el, id) {
         <div class="row"><span class="r-label">Precio ${
           it.comprado && it.precio_real != null ? 'pagado' : 'estimado'
         }</span><span class="r-value tnum">${money(montoItem(it))}</span></div>
-        <div class="row"><span class="r-label">Prioridad</span><span class="r-value">${
-          PRIO_LABEL[it.prioridad] || 'Media'
-        }</span></div>
+        <div class="row"><span class="r-label">Prioridad</span><span class="r-value prio-${
+          it.prioridad || 'media'
+        }">${PRIO_LABEL[it.prioridad] || 'Media'}</span></div>
         <div class="row"><span class="r-label">Estado</span><span class="r-value">${escapeHtml(
           estado
         )}</span></div>
