@@ -1696,3 +1696,37 @@ body.modal-open {
 .tabbar a {
   font-size: 10.5px;
 }
+
+/* Ítem de meta: renglón tappable (abre detalle) + nota con enlace */
+.mi-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.mi-link {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.item-nota {
+  background: var(--panel-2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  word-break: break-word;
+}
+.nota-link {
+  color: var(--meta);
+  font-weight: 600;
+  text-decoration: underline;
+}

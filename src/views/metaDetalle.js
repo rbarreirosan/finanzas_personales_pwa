@@ -5,6 +5,7 @@ import {
   getCategorias,
   crearMetaItem,
   actualizarMetaItem,
+  eliminarMetaItem,
   crearTransaccion,
   eliminarTransaccion,
 } from '../lib/api.js';
@@ -19,6 +20,33 @@ import { escapeHtml } from '../lib/dom.js';
 
 const PRIO_LABEL = { alta: 'Alta', media: 'Media', baja: 'Baja' };
 const PRIO_RANK = { alta: 0, media: 1, baja: 2 };
+
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+
+// Primera URL http(s) dentro de un texto (o null).
+function primerEnlace(texto) {
+  const m = String(texto || '').match(URL_RE);
+  return m ? m[0] : null;
+}
+
+// Convierte URLs de un texto en enlaces clickeables (escapando el resto).
+function linkify(texto) {
+  const s = String(texto || '');
+  let out = '';
+  let last = 0;
+  let m;
+  URL_RE.lastIndex = 0;
+  while ((m = URL_RE.exec(s))) {
+    if (m.index > last) out += escapeHtml(s.slice(last, m.index));
+    const url = m[0];
+    out += `<a href="${escapeHtml(
+      url
+    )}" target="_blank" rel="noopener noreferrer" class="nota-link">${escapeHtml(url)}</a>`;
+    last = m.index + url.length;
+  }
+  if (last < s.length) out += escapeHtml(s.slice(last));
+  return out;
+}
 
 // Detalle de una meta: resumen + ítems (pendientes/comprados) + hojas.
 export function MetaDetalleView(params) {
@@ -98,16 +126,21 @@ async function init(el, id) {
       );
     const comp = items.filter((i) => i.comprado);
 
+    const linkBadge = (it) =>
+      primerEnlace(it.nota) ? '<span class="mi-link" aria-label="Tiene enlace">🔗</span>' : '';
+
     const pendHtml = pend
       .map(
         (it) => `
         <div class="meta-item pend">
           <button class="mi-check" data-buy="${it.id}" aria-label="Marcar como comprado"></button>
-          <div class="mi-body">
-            <div class="mi-name">${escapeHtml(it.nombre)}</div>
-            <div class="mi-meta pend">Prioridad ${PRIO_LABEL[it.prioridad] || 'Media'}</div>
-          </div>
-          <div class="mi-price">${money(montoItem(it))}</div>
+          <button class="mi-open" data-open="${it.id}">
+            <div class="mi-body">
+              <div class="mi-name">${escapeHtml(it.nombre)} ${linkBadge(it)}</div>
+              <div class="mi-meta pend">Prioridad ${PRIO_LABEL[it.prioridad] || 'Media'}</div>
+            </div>
+            <div class="mi-price">${money(montoItem(it))}</div>
+          </button>
         </div>`
       )
       .join('');
@@ -117,13 +150,15 @@ async function init(el, id) {
         (it) => `
         <div class="meta-item done">
           <button class="mi-check done" data-unbuy="${it.id}" aria-label="Desmarcar">✓</button>
-          <div class="mi-body">
-            <div class="mi-name done">${escapeHtml(it.nombre)}</div>
-            <div class="mi-meta done">Comprado el ${
-              it.fecha_compra ? escapeHtml(dayLabel(it.fecha_compra)) : 'hoy'
-            }</div>
-          </div>
-          <div class="mi-price done">${money(montoItem(it))}</div>
+          <button class="mi-open" data-open="${it.id}">
+            <div class="mi-body">
+              <div class="mi-name done">${escapeHtml(it.nombre)} ${linkBadge(it)}</div>
+              <div class="mi-meta done">Comprado el ${
+                it.fecha_compra ? escapeHtml(dayLabel(it.fecha_compra)) : 'hoy'
+              }</div>
+            </div>
+            <div class="mi-price done">${money(montoItem(it))}</div>
+          </button>
         </div>`
       )
       .join('');
@@ -184,57 +219,146 @@ async function init(el, id) {
         if (it) unmark(it);
       })
     );
+    body.querySelectorAll('[data-open]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const it = items.find((x) => x.id === b.dataset.open);
+        if (it) openItemDetail(it);
+      })
+    );
   }
 
-  // ---------- Hoja: agregar ítem ----------
-  function openItemSheet() {
-    const st = { prioridad: 'media' };
+  // ---------- Hoja: detalle del ítem (nota con enlace, editar, eliminar) ----------
+  function openItemDetail(it) {
+    const enlace = primerEnlace(it.nota);
+    const estado = it.comprado
+      ? `Comprado${it.fecha_compra ? ' el ' + dayLabel(it.fecha_compra) : ''}`
+      : 'Pendiente';
     sheet.innerHTML = `
       <div class="sheet-handle"></div>
-      <div class="sheet-titlebar"><h2>Agregar ítem</h2>
+      <div class="sheet-titlebar"><h2>${escapeHtml(it.nombre)}</h2>
+        <button class="sheet-close" id="d-close" aria-label="Cerrar">✕</button></div>
+
+      <div class="panel" style="margin-top:6px">
+        <div class="row"><span class="r-label">Precio ${
+          it.comprado && it.precio_real != null ? 'pagado' : 'estimado'
+        }</span><span class="r-value tnum">${money(montoItem(it))}</span></div>
+        <div class="row"><span class="r-label">Prioridad</span><span class="r-value">${
+          PRIO_LABEL[it.prioridad] || 'Media'
+        }</span></div>
+        <div class="row"><span class="r-label">Estado</span><span class="r-value">${escapeHtml(
+          estado
+        )}</span></div>
+      </div>
+
+      ${
+        it.nota
+          ? `<p class="section-label" style="margin-top:16px">Nota</p>
+             <div class="item-nota">${linkify(it.nota)}</div>`
+          : '<div class="gr-sub" style="margin-top:14px">Este ítem no tiene nota. Toca “Editar” para agregar una nota o el enlace del producto.</div>'
+      }
+
+      ${
+        enlace
+          ? `<a class="btn btn-block meta-btn" href="${escapeHtml(
+              enlace
+            )}" target="_blank" rel="noopener noreferrer" style="margin-top:14px;display:flex;align-items:center;justify-content:center;text-decoration:none">🔗 Abrir enlace del producto</a>`
+          : ''
+      }
+
+      <div class="btn-actions" style="margin-top:14px">
+        <button class="btn-danger" id="d-del">Eliminar</button>
+        <button class="btn" id="d-edit">Editar ítem</button>
+      </div>
+      ${
+        !it.comprado
+          ? '<button class="btn btn-block meta-btn" id="d-buy" style="margin-top:10px">Marcar como comprado</button>'
+          : ''
+      }
+    `;
+    sheet.querySelector('#d-close').addEventListener('click', closeSheet);
+    sheet.querySelector('#d-edit').addEventListener('click', () => openItemSheet(it));
+    sheet.querySelector('#d-buy')?.addEventListener('click', () => openBuySheet(it));
+    sheet.querySelector('#d-del').addEventListener('click', async () => {
+      if (!confirm(`¿Eliminar "${it.nombre}" de esta meta?`)) return;
+      try {
+        await eliminarMetaItem(it.id);
+        closeSheet();
+        await refresh();
+      } catch (err) {
+        alert(err.message || 'No se pudo eliminar.');
+      }
+    });
+    openSheet();
+  }
+
+  // ---------- Hoja: agregar / editar ítem ----------
+  function openItemSheet(existing = null) {
+    const editando = Boolean(existing);
+    const st = { prioridad: existing?.prioridad || 'media' };
+    sheet.innerHTML = `
+      <div class="sheet-handle"></div>
+      <div class="sheet-titlebar"><h2>${editando ? 'Editar ítem' : 'Agregar ítem'}</h2>
         <button class="sheet-close" id="s-close" aria-label="Cerrar">✕</button></div>
       <div id="s-msg"></div>
       <div class="field">
         <span class="f-label">Nombre del ítem</span>
-        <input id="s-nombre" type="text" placeholder="Ej. Escáner OBD2" />
+        <input id="s-nombre" type="text" placeholder="Ej. Escáner OBD2" value="${escapeHtml(
+          existing?.nombre || ''
+        )}" />
       </div>
       <div class="field">
         <span class="f-label">Precio estimado</span>
         <div class="amount-input-wrap"><span class="sign">$</span>
-          <input id="s-precio" class="amount-input t-ingreso" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" /></div>
+          <input id="s-precio" class="amount-input t-ingreso" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" value="${
+            existing ? Number(existing.precio_estimado) : ''
+          }" /></div>
       </div>
       <div class="field">
         <span class="f-label">Prioridad</span>
         <div class="seg" id="s-prio">
           <button type="button" data-p="alta">Alta</button>
-          <button type="button" data-p="media" class="active">Media</button>
+          <button type="button" data-p="media">Media</button>
           <button type="button" data-p="baja">Baja</button>
         </div>
       </div>
       <div class="field">
-        <span class="f-label">Nota <span class="opt">(opcional)</span></span>
-        <input id="s-nota" type="text" placeholder="Ej. Buscar en oferta" />
+        <span class="f-label">Nota o enlace <span class="opt">(opcional)</span></span>
+        <input id="s-nota" type="text" placeholder="Pega aquí el link del producto o una nota" value="${escapeHtml(
+          existing?.nota || ''
+        )}" />
       </div>
-      <button class="btn btn-block meta-btn" id="s-save" style="margin-top:6px">Guardar ítem</button>
+      <button class="btn btn-block meta-btn" id="s-save" style="margin-top:6px">${
+        editando ? 'Guardar cambios' : 'Guardar ítem'
+      }</button>
     `;
+    const syncPrio = () =>
+      sheet
+        .querySelectorAll('#s-prio button')
+        .forEach((x) => x.classList.toggle('active', x.dataset.p === st.prioridad));
     sheet.querySelectorAll('#s-prio button').forEach((b) =>
       b.addEventListener('click', () => {
         st.prioridad = b.dataset.p;
-        sheet.querySelectorAll('#s-prio button').forEach((x) => x.classList.toggle('active', x === b));
+        syncPrio();
       })
     );
+    syncPrio();
     sheet.querySelector('#s-close').addEventListener('click', closeSheet);
     sheet.querySelector('#s-save').addEventListener('click', async () => {
       const msg = sheet.querySelector('#s-msg');
       msg.innerHTML = '';
+      const datos = {
+        nombre: sheet.querySelector('#s-nombre').value,
+        precio_estimado: sheet.querySelector('#s-precio').value,
+        prioridad: st.prioridad,
+        nota: sheet.querySelector('#s-nota').value,
+      };
+      if (!datos.nombre.trim()) {
+        msg.innerHTML = '<div class="msg error">Ponle un nombre al ítem.</div>';
+        return;
+      }
       try {
-        await crearMetaItem({
-          meta_id: id,
-          nombre: sheet.querySelector('#s-nombre').value,
-          precio_estimado: sheet.querySelector('#s-precio').value,
-          prioridad: st.prioridad,
-          nota: sheet.querySelector('#s-nota').value,
-        });
+        if (editando) await actualizarMetaItem(existing.id, datos);
+        else await crearMetaItem({ meta_id: id, ...datos });
         closeSheet();
         await refresh();
       } catch (err) {
