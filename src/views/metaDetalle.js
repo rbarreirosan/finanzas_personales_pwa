@@ -205,7 +205,7 @@ async function init(el, id) {
     `;
 
     body.querySelectorAll('[data-additem]').forEach((b) =>
-      b.addEventListener('click', openItemSheet)
+      b.addEventListener('click', () => openItemSheet())
     );
     body.querySelectorAll('[data-buy]').forEach((b) =>
       b.addEventListener('click', () => {
