@@ -11,11 +11,12 @@ import { escapeHtml } from '../lib/dom.js';
 export function PresupuestoFormView(params) {
   const el = document.createElement('div');
   el.className = 'screen';
+  const volverMes = params?.get('mes') || currentMonth();
   el.innerHTML = `
     <header class="app-header">
       <div class="bar">
         <div class="hdr-left">
-          <a class="back-btn" href="#/presupuestos" aria-label="Volver">‹</a>
+          <a class="back-btn" href="#/presupuestos?mes=${volverMes}" aria-label="Volver">‹</a>
           <h1 class="large-title">Presupuesto</h1>
         </div>
       </div>
@@ -111,7 +112,7 @@ async function init(el, params) {
         if (!confirm('¿Eliminar este presupuesto?')) return;
         try {
           await eliminarPresupuesto(ex.id);
-          location.hash = '#/presupuestos';
+          location.hash = `#/presupuestos?mes=${mesInp.value}`;
         } catch (err) {
           msg.innerHTML = `<div class="msg error">${escapeHtml(err.message || err)}</div>`;
         }
@@ -147,7 +148,7 @@ async function init(el, params) {
         monto_presupuestado: montoInp.value,
         rollover: rolloverInp.checked,
       });
-      location.hash = '#/presupuestos';
+      location.hash = `#/presupuestos?mes=${mesInp.value}`;
     } catch (err) {
       msg.innerHTML = `<div class="msg error">${escapeHtml(
         err.message || 'No se pudo guardar.'

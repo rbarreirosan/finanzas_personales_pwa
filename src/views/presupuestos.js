@@ -71,10 +71,12 @@ function gaugeCard(saldoLiquido, totalPres, pendiente, objetivo) {
 
 // Presupuestos del mes desde la vista v_presupuestos (gastado, disponible,
 // pct_consumido y semáforo ya calculados).
-export function PresupuestosView() {
+export function PresupuestosView(params) {
   const el = document.createElement('div');
   el.className = 'screen';
-  let mes = currentMonth();
+  // Puede llegar un mes en la URL (al volver del formulario del mes que se
+  // estaba presupuestando); si no, arranca en el mes actual.
+  let mes = params?.get('mes') || currentMonth();
 
   el.innerHTML = `
     <header class="app-header">
