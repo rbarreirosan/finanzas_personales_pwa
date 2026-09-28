@@ -9,6 +9,15 @@ import {
 import { getObjetivo } from '../lib/objetivo.js';
 import { escapeHtml } from '../lib/dom.js';
 
+// 'YYYY-MM' desplazado `delta` meses.
+function shiftMonth(mes, delta) {
+  const [y, m] = mes.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const mesLabel = (mes) => cap(monthLabel(mes).replace(' de ', ' '));
+
 // Tarjeta hero con degradado dinámico verde→rojo según qué tan cerca está lo
 // "libre para dirigir" del objetivo del mes (verde = objetivo cubierto).
 //
@@ -65,24 +74,59 @@ function gaugeCard(saldoLiquido, totalPres, pendiente, objetivo) {
 export function PresupuestosView() {
   const el = document.createElement('div');
   el.className = 'screen';
-  const mes = currentMonth();
+  let mes = currentMonth();
 
   el.innerHTML = `
     <header class="app-header">
       <div class="bar">
         <div>
           <h1 class="large-title">Presupuestos</h1>
-          <div class="subtitle" id="pres-sub">${escapeHtml(monthLabel(mes))}</div>
+          <div class="subtitle" id="pres-sub">Cargando…</div>
         </div>
-        <a class="icon-btn" href="#/presupuesto" aria-label="Nuevo presupuesto">+</a>
+        <a class="icon-btn" id="pres-add" href="#/presupuesto?mes=${mes}" aria-label="Nuevo presupuesto">+</a>
       </div>
     </header>
+    <div class="mov-filter" id="pres-filter"></div>
     <div class="screen-body" id="pres-content">
       <div class="loading">Cargando presupuestos…</div>
     </div>
   `;
 
-  load(el.querySelector('#pres-content'), el.querySelector('#pres-sub'), mes);
+  const content = el.querySelector('#pres-content');
+  const sub = el.querySelector('#pres-sub');
+  const filterBar = el.querySelector('#pres-filter');
+  const addBtn = el.querySelector('#pres-add');
+
+  function renderFilter() {
+    filterBar.innerHTML = `
+      <div class="mf-nav-wrap">
+        <button class="mf-hoy" id="pf-hoy">Hoy</button>
+        <button class="mf-nav" id="pf-prev" aria-label="Mes anterior">‹</button>
+        <span class="mf-mes">${escapeHtml(mesLabel(mes))}</span>
+        <button class="mf-nav" id="pf-next" aria-label="Mes siguiente">›</button>
+      </div>`;
+    filterBar.querySelector('#pf-hoy').addEventListener('click', () => {
+      mes = currentMonth();
+      reload();
+    });
+    filterBar.querySelector('#pf-prev').addEventListener('click', () => {
+      mes = shiftMonth(mes, -1);
+      reload();
+    });
+    filterBar.querySelector('#pf-next').addEventListener('click', () => {
+      mes = shiftMonth(mes, 1);
+      reload();
+    });
+  }
+
+  function reload() {
+    addBtn.href = `#/presupuesto?mes=${mes}`;
+    renderFilter();
+    content.innerHTML = '<div class="loading">Cargando presupuestos…</div>';
+    load(content, sub, mes);
+  }
+
+  reload();
   return el;
 }
 
@@ -95,9 +139,10 @@ async function load(container, sub, mes) {
     ]);
 
     if (!items.length) {
+      sub.textContent = 'Aún sin presupuestos';
       container.innerHTML = `
-        <div class="empty">No hay presupuestos definidos para este mes.</div>
-        <a class="btn btn-block" href="#/presupuesto" style="text-decoration:none;display:flex;align-items:center;justify-content:center">
+        <div class="empty">No hay presupuestos definidos para ${escapeHtml(mesLabel(mes))}.</div>
+        <a class="btn btn-block" href="#/presupuesto?mes=${mes}" style="text-decoration:none;display:flex;align-items:center;justify-content:center">
           + Crear presupuesto
         </a>`;
       return;
@@ -119,9 +164,7 @@ async function load(container, sub, mes) {
         ),
       0
     );
-    sub.textContent = `${monthLabel(mes)} · ${money(totalGastado)} de ${money(
-      totalPres
-    )}`;
+    sub.textContent = `${money(totalGastado)} de ${money(totalPres)}`;
 
     // Resumen: tarjeta con medidor dinámico (verde→rojo) de lo "libre para
     // dirigir" respecto al objetivo del mes (ajustable en Ajustes).
@@ -180,7 +223,11 @@ async function load(container, sub, mes) {
       <p class="section-label">Por categoría</p>
       ${cards}
       <div class="glass-row space">
-        <span style="font-size:13px;color:var(--t-70)">Quedan ${daysLeftInMonth()} días del mes</span>
+        <span style="font-size:13px;color:var(--t-70)">${
+          mes === currentMonth()
+            ? `Quedan ${daysLeftInMonth()} días del mes`
+            : `Estás planeando ${escapeHtml(mesLabel(mes))}`
+        }</span>
       </div>
     `;
   } catch (err) {
