@@ -216,7 +216,7 @@ export function listCuentas() {
 // ---------- Movimientos (vista v_transacciones) ----------
 // Lista de transacciones con nombres de cuenta/categoría ya resueltos,
 // ordenadas de la más reciente a la más antigua.
-export function getMovimientos(limit = 200) {
+export function getMovimientos(limit = 500) {
   return cachedRead('movimientos', async () => {
     const { data, error } = await supabase
       .from('v_transacciones')

@@ -1752,3 +1752,99 @@ body.modal-open {
 .mi-check.prio-alta { border-color: #dc2626; }
 .mi-check.prio-media { border-color: #f0b429; }
 .mi-check.prio-baja { border-color: #2563eb; }
+
+/* Barra de filtro de Movimientos (navegar por mes + calendario) */
+.mov-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 20px 6px;
+}
+.mf-nav-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.mf-hoy {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--hair);
+  color: var(--t-70);
+  font: 600 13px/1 var(--font);
+  cursor: pointer;
+}
+.mf-nav {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: none;
+  border: 1px solid var(--hair);
+  color: var(--indigo);
+  font: 500 18px/1 var(--font);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-mes {
+  flex: 1;
+  min-width: 0;
+  font: 700 16px/1.15 var(--font);
+  letter-spacing: -0.3px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mf-cal {
+  flex: none;
+  width: 46px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--hair);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-cal.active {
+  border-color: var(--indigo);
+  background: rgba(99, 102, 241, 0.08);
+}
+.mf-chip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--indigo);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font: 600 14px/1 var(--font);
+}
+.mf-chip .mf-x {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.btn-ghost {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--hair);
+  background: var(--panel-2);
+  color: var(--text);
+  font: 600 15px/1 var(--font);
+  cursor: pointer;
+}
